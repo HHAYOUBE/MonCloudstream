@@ -1,36 +1,26 @@
 # MonCloudstream — dépôt personnel d'extensions CloudStream
 
-Ce dépôt contient des extensions CloudStream et le module personnel `MonExtension`.
-
-Pour la documentation de l'application, consulte le [dépôt officiel de CloudStream](https://github.com/recloudstream/cloudstream).
+Ce dépôt contient les extensions existantes et trois modules personnels/en préparation.
 
 ## Modules
-
 - AfterDark
 - Frembed
 - Flemmix / Wiflix
 - Xalaflix
-- **MonExtension** : squelette personnel à adapter à une source que tu es autorisé à intégrer.
+- MonExtension
+- AnimeSama
+- SenpaiStream
+
+**Important :** AnimeSama et SenpaiStream sont pour le moment des squelettes installables uniquement si la compilation réussit. Leur recherche, leurs fiches et la lecture ne sont pas implémentées ; le nom et l'URL configurée ne suffisent pas à rendre un site lisible dans CloudStream. Les intégrations de lecture doivent se limiter aux contenus et flux autorisés.
 
 ## Installer le dépôt
 
-Après publication réussie du workflow, ajoute cette adresse dans CloudStream :
+Après une publication réussie du workflow, ajoute cette adresse dans CloudStream :
 
 ```text
 https://raw.githubusercontent.com/HHAYOUBE/MonCloudstream/builds/repo.json
 ```
 
-## Ajouter une source à MonExtension
+## Développement
 
-1. Ouvre `MonExtension/src/main/kotlin/com/hhayoube/monextension/MonExtensionConfig.kt`.
-2. Modifie `baseUrl` avec le domaine HTTPS de la source autorisée.
-3. Adapte `MonExtensionProvider.kt` à la structure du site : modifier uniquement l'adresse ne suffit pas si sa recherche et ses pages ont une structure différente.
-4. Enregistre les changements et pousse-les sur la branche principale après avoir testé la branche de fonctionnalité.
-
-Le module est actuellement un **squelette de départ** : la recherche et les fiches ne sont pas encore implémentées. Il faut adapter le parseur au site choisi avant de pouvoir l'utiliser.
-
-## Publication automatique
-
-Le workflow `.github/workflows/build.yml` compile les cinq modules et publie les fichiers `.cs3`, `plugins.json` et `repo.json` sur la branche `builds`.
-
-Les changements de cette branche de travail ne modifient pas `main` tant qu'ils ne sont pas fusionnés.
+La compilation de validation est définie dans `.github/workflows/validate-build.yml`. La publication vers la branche `builds` se fait depuis `main` ou `master` après fusion des changements. Vérifie que GitHub Actions termine avec succès avant d'essayer d'installer le dépôt sur la télé.
