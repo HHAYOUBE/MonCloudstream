@@ -1,78 +1,26 @@
-# CloudStream — AfterDark + Frembed + Flemmix/Wiflix + Xalaflix
+# MonCloudstream — dépôt personnel d'extensions CloudStream
 
-Ce dépôt contient plusieurs extensions pour [CloudStream](https://github.com/recloudstream/cloudstream).
+Ce dépôt contient les extensions existantes et trois modules personnels/en préparation.
 
-> [!IMPORTANT]\
-> Pour télécharger CloudStream, consulter sa documentation ou obtenir des informations fiables sur le projet, utilisez les ressources officielles :
->
-> - **CloudStream officiel :** [https://github.com/recloudstream/cloudstream](https://github.com/recloudstream/cloudstream)
-> - **CloudStream Wiki :** [https://cloudstream.miraheze.org/wiki/Main_Page](https://cloudstream.miraheze.org/wiki/Main_Page)
->
-> Évitez les sites non officiels se faisant passer pour CloudStream.
+## Modules
+- AfterDark
+- Frembed
+- Flemmix / Wiflix
+- Xalaflix
+- MonExtension
+- AnimeSama
+- SenpaiStream
 
-## Extensions
+**Important :** AnimeSama et SenpaiStream sont pour le moment des squelettes installables uniquement si la compilation réussit. Leur recherche, leurs fiches et la lecture ne sont pas implémentées ; le nom et l'URL configurée ne suffisent pas à rendre un site lisible dans CloudStream. Les intégrations de lecture doivent se limiter aux contenus et flux autorisés.
 
-### AfterDark
+## Installer le dépôt
 
-- Vérification automatique de la disponibilité des vidéos.
-- Lancement automatique de la vidéo.
-- Support presque natif de Peachify.
-- Indicateur du temps restant lorsqu'un épisode de série n'est pas encore sorti.
-- Affichage du nom et de la description des épisodes.
-- Résolution automatique du domaine actif.
-
-### Frembed
-
-- Support natif des films et séries.
-- Indicateur du temps restant lorsqu'un épisode de série n'est pas encore sorti.
-- Affichage du nom et de la description des épisodes.
-- Résolution automatique du domaine actif.
-
-### Flemmix / Wiflix
-
-- Support natif des films et séries.
-- Indicateur du temps restant lorsqu'un épisode de série n'est pas encore sorti.
-- Affichage du nom et de la description des épisodes.
-- Résolution automatique du domaine actif.
-
-### Xalaflix
-
-- Catalogue natif.
-- Recherche native.
-- Lecture native.
-- Résolution automatique du domaine actif.
-
-Les extensions sont capables de suivre automatiquement les changements d'URL des services dont elles dépendent.
-
-## Installation
-
-Ajoutez l'URL suivante comme dépôt dans CloudStream :
+Après une publication réussie du workflow, ajoute cette adresse dans CloudStream :
 
 ```text
-https://raw.githubusercontent.com/yorik100/Cloudstream/builds/repo.json
+https://raw.githubusercontent.com/HHAYOUBE/MonCloudstream/builds/repo.json
 ```
 
-## Publication
+## Développement
 
-Le workflow `.github/workflows/build.yml` compile les quatre modules puis publie les fichiers suivants dans la branche `builds` :
-
-```text
-AfterDark.cs3
-Frembed.cs3
-Flemmix.cs3
-Xalaflix.cs3
-plugins.json
-repo.json
-```
-
-## Liens CloudStream
-
-- [Dépôt GitHub officiel de CloudStream](https://github.com/recloudstream/cloudstream)
-- [Wiki officiel de CloudStream](https://cloudstream.miraheze.org/wiki/Main_Page)
-- [Liste des dépôts CloudStream](https://github.com/recloudstream/cs-repos)
-
-## Avertissement
-
-CloudStream est un lecteur multimédia basé sur un système d'extensions. CloudStream ne fournit pas de sources vidéo par défaut. Les extensions tierces ne sont pas nécessairement développées, maintenues ou approuvées par l'équipe CloudStream.
-
-Pour toute information concernant l'application elle-même, consultez le [dépôt officiel CloudStream](https://github.com/recloudstream/cloudstream) ou le [CloudStream Wiki](https://cloudstream.miraheze.org/wiki/Main_Page).
+La compilation de validation est définie dans `.github/workflows/validate-build.yml`. La publication vers la branche `builds` se fait depuis `main` ou `master` après fusion des changements. Vérifie que GitHub Actions termine avec succès avant d'essayer d'installer le dépôt sur la télé.

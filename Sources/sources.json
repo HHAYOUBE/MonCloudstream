@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "note": "Liens vers les sites officiels. Ce fichier est un catalogue, pas un fournisseur de lecture CloudStream.",
+  "sources": [
+    {
+      "id": "internet-archive-films",
+      "name": "Internet Archive — Feature Films",
+      "url": "https://archive.org/details/feature_films",
+      "type": "public-domain-and-licensed",
+      "description": "Collection de films ; vérifier les droits indiqués sur chaque œuvre."
+    },
+    {
+      "id": "arte",
+      "name": "ARTE",
+      "url": "https://www.arte.tv/fr/",
+      "type": "official",
+      "description": "Films, documentaires et programmes proposés officiellement."
+    },
+    {
+      "id": "crunchyroll",
+      "name": "Crunchyroll",
+      "url": "https://www.crunchyroll.com/",
+      "type": "official",
+      "description": "Catalogue officiel d’animation, selon disponibilité régionale et conditions du service."
+    }
+  ]
+}
