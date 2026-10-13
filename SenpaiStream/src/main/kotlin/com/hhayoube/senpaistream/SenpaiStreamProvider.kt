@@ -1,5 +1,6 @@
 package com.hhayoube.senpaistream
 
+import com.lagradost.cloudstream3.DubStatus
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.SearchResponse
@@ -13,10 +14,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 
-/**
- * Recherche et fiches d'anime via l'API publique AniList.
- * Cette intégration fournit des métadonnées, pas de flux vidéo.
- */
+/** Anime metadata from AniList. This provider does not extract or host video streams. */
 class SenpaiStreamProvider : MainAPI() {
     override var mainUrl = SenpaiStreamConfig.baseUrl
     override var name = "Senpai-Stream"
@@ -31,44 +29,30 @@ class SenpaiStreamProvider : MainAPI() {
             .toJson()
             .toRequestBody(RequestBodyTypes.JSON.toMediaTypeOrNull())
         return JSONObject(
-            app.post(
-                endpoint,
-                requestBody = body,
-                headers = mapOf("Accept" to "application/json")
-            ).text
+            app.post(endpoint, requestBody = body, headers = mapOf("Accept" to "application/json")).text
         )
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
         val term = query.trim()
         if (term.isEmpty()) return emptyList()
-
         val gql = """
-            query (${'$'}search: String) {
+            query ($search: String) {
               Page(page: 1, perPage: 20) {
-                media(search: ${'$'}search, type: ANIME, isAdult: false, sort: SEARCH_MATCH) {
+                media(search: $search, type: ANIME, isAdult: false, sort: SEARCH_MATCH) {
                   id
                   title { romaji english native }
                   coverImage { large extraLarge }
                   startDate { year }
                   episodes
-                  format
                 }
               }
             }
         """.trimIndent()
-
-        val root = try {
-            request(gql, mapOf("search" to term))
-        } catch (_: Exception) {
-            return emptyList()
-        }
-
-        val media = root.optJSONObject("data")?.optJSONObject("Page")?.optJSONArray("media")
-            ?: return emptyList()
-
-        return (0 until media.length()).mapNotNull { index ->
-            val item = media.optJSONObject(index) ?: return@mapNotNull null
+        val root = try { request(gql, mapOf("search" to term)) } catch (_: Exception) { return emptyList() }
+        val media = root.optJSONObject("data")?.optJSONObject("Page")?.optJSONArray("media") ?: return emptyList()
+        return (0 until media.length()).mapNotNull { i ->
+            val item = media.optJSONObject(i) ?: return@mapNotNull null
             val titles = item.optJSONObject("title") ?: JSONObject()
             val title = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
                 ?: titles.optString("romaji").takeIf { it.isNotBlank() && it != "null" }
@@ -76,26 +60,23 @@ class SenpaiStreamProvider : MainAPI() {
                 ?: return@mapNotNull null
             val id = item.optInt("id", 0)
             if (id <= 0) return@mapNotNull null
-            val poster = item.optJSONObject("coverImage")?.optString("extraLarge")
-                ?.takeIf { it.isNotBlank() && it != "null" }
-                ?: item.optJSONObject("coverImage")?.optString("large")
+            val cover = item.optJSONObject("coverImage")
+            val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
+                ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
             newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
-                posterUrl = poster?.takeIf { it.isNotBlank() && it != "null" }
+                posterUrl = poster
                 year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
-                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[com.lagradost.cloudstream3.DubStatus.Subbed] = it }
+                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
                 otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
             }
         }
     }
 
     override suspend fun load(url: String): LoadResponse? {
-        val id = Regex("/anilist/(\\d+)").find(url)?.groupValues?.getOrNull(1)?.toIntOrNull()
-            ?: Regex("(?:anime/|id=)(\\d+)").find(url)?.groupValues?.getOrNull(1)?.toIntOrNull()
-            ?: return null
-
+        val id = Regex("/anilist/(\\d+)").find(url)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return null
         val gql = """
-            query (${'$'}id: Int) {
-              Media(id: ${'$'}id, type: ANIME) {
+            query ($id: Int) {
+              Media(id: $id, type: ANIME) {
                 id
                 title { romaji english native }
                 description(asHtml: false)
@@ -106,84 +87,30 @@ class SenpaiStreamProvider : MainAPI() {
                 duration
                 genres
                 synonyms
-                siteUrl
               }
             }
         """.trimIndent()
-
-        val root = try {
-            request(gql, mapOf("id" to id))
-        } catch (_: Exception) {
-            return null
-        }
+        val root = try { request(gql, mapOf("id" to id)) } catch (_: Exception) { return null }
         val item = root.optJSONObject("data")?.optJSONObject("Media") ?: return null
         val titles = item.optJSONObject("title") ?: JSONObject()
         val title = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
             ?: titles.optString("romaji").takeIf { it.isNotBlank() && it != "null" }
+            ?: titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
             ?: return null
-        val poster = item.optJSONObject("coverImage")?.optString("extraLarge")
-            ?.takeIf { it.isNotBlank() && it != "null" }
-            ?: item.optJSONObject("coverImage")?.optString("large")
-        val description = item.optString("description").takeIf { it.isNotBlank() && it != "null" }
-
+        val cover = item.optJSONObject("coverImage")
+        val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
+            ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
         return newAnimeLoadResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
             engName = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
             japName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
             posterUrl = poster
             backgroundPosterUrl = item.optString("bannerImage").takeIf { it.isNotBlank() && it != "null" }
             year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
-            plot = description
+            plot = item.optString("description").takeIf { it.isNotBlank() && it != "null" }
             duration = item.optInt("duration", 0).takeIf { it > 0 }
-            tags = item.optJSONArray("genres")?.let { array ->
-                (0 until array.length()).mapNotNull { i -> array.optString(i).takeIf { it.isNotBlank() } }
-            }
-            synonyms = item.optJSONArray("synonyms")?.let { array ->
-                (0 until array.length()).mapNotNull { i -> array.optString(i).takeIf { it.isNotBlank() } }
-            }
+            tags = item.optJSONArray("genres")?.let { arr -> (0 until arr.length()).mapNotNull { arr.optString(it).takeIf(String::isNotBlank) } }
+            synonyms = item.optJSONArray("synonyms")?.let { arr -> (0 until arr.length()).mapNotNull { arr.optString(it).takeIf(String::isNotBlank) } }
             comingSoon = false
         }
     }
 }
-}search: String) {
-              Page(page: 1, perPage: 20) {
-                media(search: $search, type: ANIME, isAdult: false, sort: SEARCH_MATCH) {
-                  id
-                  title { romaji english native }
-                  coverImage { large extraLarge }
-                  startDate { year }
-                  episodes
-                  format
-                }
-              }
-            }
-        """.trimIndent()
-
-        val root = try {
-            request(gql, mapOf("search" to term))
-        } catch (_: Exception) {
-            return emptyList()
-        }
-
-        val media = root.optJSONObject("data")?.optJSONObject("Page")?.optJSONArray("media")
-            ?: return emptyList()
-
-        return (0 until media.length()).mapNotNull { index ->
-            val item = media.optJSONObject(index) ?: return@mapNotNull null
-            val titles = item.optJSONObject("title") ?: JSONObject()
-            val title = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
-                ?: titles.optString("romaji").takeIf { it.isNotBlank() && it != "null" }
-                ?: titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
-                ?: return@mapNotNull null
-            val id = item.optInt("id", 0)
-            if (id <= 0) return@mapNotNull null
-            val poster = item.optJSONObject("coverImage")?.optString("extraLarge")
-                ?.takeIf { it.isNotBlank() && it != "null" }
-                ?: item.optJSONObject("coverImage")?.optString("large")
-            newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
-                posterUrl = poster?.takeIf { it.isNotBlank() && it != "null" }
-                year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
-                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[com.lagradost.cloudstream3.DubStatus.Subbed] = it }
-                otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
-            }
-        }
-    }
