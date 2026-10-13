@@ -37,11 +37,6 @@ jobs:
       - name: Install Android 35
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Setup Gradle 8.14.4
-        uses: gradle/actions/setup-gradle@v6
-        with:
-          gradle-version: "8.14.4"
-
       - name: Build all extensions
         run: |
           gradle :AfterDark:make :Frembed:make :Flemmix:make :Xalaflix:make :MonExtension:make :AnimeSama:make :SenpaiStream:make makePluginsJson --stacktrace
@@ -52,10 +47,12 @@ jobs:
 
           plugins_file = Path("build/plugins.json")
           plugins = json.loads(plugins_file.read_text(encoding="utf-8"))
+          wanted = {"AnimeSama", "SenpaiStream"}
+          plugins = [plugin for plugin in plugins if plugin.get("internalName") in wanted]
 
-          for plugin in plugins:
-              if plugin.get("internalName") == "Flemmix":
-                  plugin["name"] = "Flemmix/Wiflix"
+          found = {plugin.get("internalName") for plugin in plugins}
+          if found != wanted or len(plugins) != 2:
+              raise SystemExit(f"Expected exactly AnimeSama and SenpaiStream in catalog, found: {sorted(found)}")
 
           plugins_file.write_text(
               json.dumps(plugins, ensure_ascii=False, indent=2) + "\n",
@@ -71,17 +68,16 @@ jobs:
           rm -rf /tmp/cloudstream-publish
           mkdir -p /tmp/cloudstream-publish
 
-          for module in AfterDark Frembed Flemmix Xalaflix MonExtension AnimeSama SenpaiStream; do
+          for module in AnimeSama SenpaiStream; do
             find "$module/build" -maxdepth 1 -type f -name '*.cs3' -exec cp -v {} /tmp/cloudstream-publish/ \;
-            find "$module/build" -maxdepth 1 -type f -name '*.jar' -exec cp -v {} /tmp/cloudstream-publish/ \;
           done
 
           cp -v build/plugins.json /tmp/cloudstream-publish/plugins.json
           cp -v repo.json /tmp/cloudstream-publish/repo.json
 
           CS3_COUNT="$(find /tmp/cloudstream-publish -maxdepth 1 -type f -name '*.cs3' | wc -l)"
-          if [ "$CS3_COUNT" -lt 7 ]; then
-            echo "ERROR: expected at least 7 .cs3 files, found $CS3_COUNT"
+          if [ "$CS3_COUNT" -ne 2 ]; then
+            echo "ERROR: expected exactly 2 .cs3 files, found $CS3_COUNT"
             find /tmp/cloudstream-publish -maxdepth 1 -type f -print
             exit 1
           fi
@@ -100,7 +96,7 @@ jobs:
           set -euo pipefail
 
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+users.noreply.github.com"
 
           git switch --orphan builds
           git rm -rf . >/dev/null 2>&1 || true
