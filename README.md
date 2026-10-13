@@ -1,78 +1,36 @@
-# CloudStream — AfterDark + Frembed + Flemmix/Wiflix + Xalaflix
+# MonCloudstream — dépôt personnel d'extensions CloudStream
 
-Ce dépôt contient plusieurs extensions pour [CloudStream](https://github.com/recloudstream/cloudstream).
+Ce dépôt contient des extensions CloudStream et le module personnel `MonExtension`.
 
-> [!IMPORTANT]\
-> Pour télécharger CloudStream, consulter sa documentation ou obtenir des informations fiables sur le projet, utilisez les ressources officielles :
->
-> - **CloudStream officiel :** [https://github.com/recloudstream/cloudstream](https://github.com/recloudstream/cloudstream)
-> - **CloudStream Wiki :** [https://cloudstream.miraheze.org/wiki/Main_Page](https://cloudstream.miraheze.org/wiki/Main_Page)
->
-> Évitez les sites non officiels se faisant passer pour CloudStream.
+Pour la documentation de l'application, consulte le [dépôt officiel de CloudStream](https://github.com/recloudstream/cloudstream).
 
-## Extensions
+## Modules
 
-### AfterDark
+- AfterDark
+- Frembed
+- Flemmix / Wiflix
+- Xalaflix
+- **MonExtension** : squelette personnel à adapter à une source que tu es autorisé à intégrer.
 
-- Vérification automatique de la disponibilité des vidéos.
-- Lancement automatique de la vidéo.
-- Support presque natif de Peachify.
-- Indicateur du temps restant lorsqu'un épisode de série n'est pas encore sorti.
-- Affichage du nom et de la description des épisodes.
-- Résolution automatique du domaine actif.
+## Installer le dépôt
 
-### Frembed
-
-- Support natif des films et séries.
-- Indicateur du temps restant lorsqu'un épisode de série n'est pas encore sorti.
-- Affichage du nom et de la description des épisodes.
-- Résolution automatique du domaine actif.
-
-### Flemmix / Wiflix
-
-- Support natif des films et séries.
-- Indicateur du temps restant lorsqu'un épisode de série n'est pas encore sorti.
-- Affichage du nom et de la description des épisodes.
-- Résolution automatique du domaine actif.
-
-### Xalaflix
-
-- Catalogue natif.
-- Recherche native.
-- Lecture native.
-- Résolution automatique du domaine actif.
-
-Les extensions sont capables de suivre automatiquement les changements d'URL des services dont elles dépendent.
-
-## Installation
-
-Ajoutez l'URL suivante comme dépôt dans CloudStream :
+Après publication réussie du workflow, ajoute cette adresse dans CloudStream :
 
 ```text
-https://raw.githubusercontent.com/yorik100/Cloudstream/builds/repo.json
+https://raw.githubusercontent.com/HHAYOUBE/MonCloudstream/builds/repo.json
 ```
 
-## Publication
+## Ajouter une source à MonExtension
 
-Le workflow `.github/workflows/build.yml` compile les quatre modules puis publie les fichiers suivants dans la branche `builds` :
+1. Ouvre `MonExtension/src/main/kotlin/com/hhayoube/monextension/MonExtensionConfig.kt`.
+2. Modifie `baseUrl` avec le domaine HTTPS de la source autorisée.
+3. Adapte `MonExtensionProvider.kt` à la structure du site : modifier uniquement l'adresse ne suffit pas si sa recherche et ses pages ont une structure différente.
+4. Enregistre les changements et pousse-les sur la branche principale après avoir testé la branche de fonctionnalité.
 
-```text
-AfterDark.cs3
-Frembed.cs3
-Flemmix.cs3
-Xalaflix.cs3
-plugins.json
-repo.json
-```
+Le module est actuellement un **squelette de départ** : la recherche et les fiches ne sont pas encore implémentées. Il faut adapter le parseur au site choisi avant de pouvoir l'utiliser.
 
-## Liens CloudStream
+## Publication automatique
 
-- [Dépôt GitHub officiel de CloudStream](https://github.com/recloudstream/cloudstream)
-- [Wiki officiel de CloudStream](https://cloudstream.miraheze.org/wiki/Main_Page)
-- [Liste des dépôts CloudStream](https://github.com/recloudstream/cs-repos)
+Le workflow `.github/workflows/build.yml` compile les cinq modules et publie les fichiers `.cs3`, `plugins.json` et `repo.json` sur la branche `builds`.
 
-## Avertissement
-
-CloudStream est un lecteur multimédia basé sur un système d'extensions. CloudStream ne fournit pas de sources vidéo par défaut. Les extensions tierces ne sont pas nécessairement développées, maintenues ou approuvées par l'équipe CloudStream.
-
-Pour toute information concernant l'application elle-même, consultez le [dépôt officiel CloudStream](https://github.com/recloudstream/cloudstream) ou le [CloudStream Wiki](https://cloudstream.miraheze.org/wiki/Main_Page).
+Les changements de cette branche de travail ne modifient pas `main` tant qu'ils ne sont pas fusionnés.
