@@ -44,9 +44,9 @@ class AnimeSamaProvider : MainAPI() {
         if (term.isEmpty()) return emptyList()
 
         val gql = """
-            query (${' {
+            query (${'$'}search: String) {
               Page(page: 1, perPage: 20) {
-                media(search: ${' type: ANIME, isAdult: false, sort: SEARCH_MATCH) {
+                media(search: ${'$'}search, type: ANIME, isAdult: false, sort: SEARCH_MATCH) {
                   id
                   title { romaji english native }
                   coverImage { large extraLarge }
@@ -94,8 +94,8 @@ class AnimeSamaProvider : MainAPI() {
             ?: return null
 
         val gql = """
-            query (${' {
-              Media(id: ${' type: ANIME) {
+            query (${'$'}id: Int) {
+              Media(id: ${'$'}id, type: ANIME) {
                 id
                 title { romaji english native }
                 description(asHtml: false)
