@@ -42,13 +42,13 @@ jobs:
           gradle-version: "8.14.4"
 
       - name: Build all extensions
-        run: gradle :AfterDark:make :Frembed:make :Flemmix:make :Xalaflix:make :MonExtension:make makePluginsJson --stacktrace
+        run: gradle :AfterDark:make :Frembed:make :Flemmix:make :Xalaflix:make :MonExtension:make :AnimeSama:make :SenpaiStream:make makePluginsJson --stacktrace
 
       - name: Verify generated packages
         shell: bash
         run: |
           set -euo pipefail
-          for module in AfterDark Frembed Flemmix Xalaflix MonExtension; do
+          for module in AfterDark Frembed Flemmix Xalaflix MonExtension AnimeSama SenpaiStream; do
             if ! find "$module/build" -maxdepth 1 -type f -name '*.cs3' -print -quit | grep -q .; then
               echo "Missing .cs3 package for $module"
               find "$module/build" -maxdepth 2 -type f -print || true
