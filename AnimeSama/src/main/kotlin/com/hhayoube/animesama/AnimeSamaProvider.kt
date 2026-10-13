@@ -7,8 +7,11 @@ import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.newAnimeLoadResponse
 import com.lagradost.cloudstream3.newAnimeSearchResponse
+import com.lagradost.cloudstream3.utils.AppUtils.toJson
+import com.lagradost.nicehttp.RequestBodyTypes
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
-import java.net.URLEncoder
 
 /**
  * Recherche et fiches d'anime via l'API publique AniList.
@@ -24,11 +27,16 @@ class AnimeSamaProvider : MainAPI() {
     private val endpoint = "https://graphql.anilist.co"
 
     private suspend fun request(query: String, variables: Map<String, Any?>): JSONObject {
-        val payload = mapOf("query" to query, "variables" to variables)
-        return JSONObject(app.post(endpoint, data = mapOf(
-            "query" to query,
-            "variables" to org.json.JSONObject(variables).toString()
-        ), headers = mapOf("Accept" to "application/json")).text)
+        val body = mapOf("query" to query, "variables" to variables)
+            .toJson()
+            .toRequestBody(RequestBodyTypes.JSON.toMediaTypeOrNull())
+        return JSONObject(
+            app.post(
+                endpoint,
+                requestBody = body,
+                headers = mapOf("Accept" to "application/json")
+            ).text
+        )
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
