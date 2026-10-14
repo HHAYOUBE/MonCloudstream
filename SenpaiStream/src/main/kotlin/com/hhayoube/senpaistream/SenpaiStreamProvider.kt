@@ -38,9 +38,9 @@ class SenpaiStreamProvider : MainAPI() {
         val term = query.trim()
         if (term.isEmpty()) return emptyList()
         val gql = """
-            query (${': String) {
+            query (${'$'}search: String) {
               Page(page: 1, perPage: 20) {
-                media(search: \$search, type: ANIME, isAdult: false, sort: SEARCH_MATCH) {
+                media(search: ${'$'}search, type: ANIME, isAdult: false, sort: SEARCH_MATCH) {
                   id title { romaji english native } coverImage { large extraLarge }
                   startDate { year } episodes
                 }
@@ -73,8 +73,8 @@ class SenpaiStreamProvider : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val id = Regex("/anilist/(\\d+)").find(url)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return null
         val gql = """
-            query (${': Int) {
-              Media(id: \$id, type: ANIME) {
+            query (${'$'}id: Int) {
+              Media(id: ${'$'}id, type: ANIME) {
                 id title { romaji english native } description(asHtml: false)
                 coverImage { large extraLarge } bannerImage startDate { year }
                 episodes duration genres synonyms
@@ -132,7 +132,7 @@ class SenpaiStreamProvider : MainAPI() {
 }
 }search: String) {
               Page(page: 1, perPage: 20) {
-                media(search: ${', type: ANIME, isAdult: false, sort: SEARCH_MATCH) {
+                media(search: ${'$'}search, type: ANIME, isAdult: false, sort: SEARCH_MATCH) {
                   id title { romaji english native } coverImage { large extraLarge }
                   startDate { year } episodes
                 }
@@ -165,8 +165,8 @@ class SenpaiStreamProvider : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val id = Regex("/anilist/(\\d+)").find(url)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return null
         val gql = """
-            query (\$id: Int) {
-              Media(id: \$id, type: ANIME) {
+            query (${'$'}id: Int) {
+              Media(id: ${'$'}id, type: ANIME) {
                 id title { romaji english native } description(asHtml: false)
                 coverImage { large extraLarge } bannerImage startDate { year }
                 episodes duration genres synonyms
@@ -255,8 +255,8 @@ class SenpaiStreamProvider : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val id = Regex("/anilist/(\\d+)").find(url)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return null
         val gql = """
-            query (\$id: Int) {
-              Media(id: \$id, type: ANIME) {
+            query (${'$'}id: Int) {
+              Media(id: ${'$'}id, type: ANIME) {
                 id title { romaji english native } description(asHtml: false)
                 coverImage { large extraLarge } bannerImage startDate { year }
                 episodes duration genres synonyms
@@ -313,7 +313,7 @@ class SenpaiStreamProvider : MainAPI() {
     }
 }
 }id: Int) {
-              Media(id: ${', type: ANIME) {
+              Media(id: ${'$'}id, type: ANIME) {
                 id title { romaji english native } description(asHtml: false)
                 coverImage { large extraLarge } bannerImage startDate { year }
                 episodes duration genres synonyms
@@ -371,7 +371,7 @@ class SenpaiStreamProvider : MainAPI() {
 }
 }search: String) {
               Page(page: 1, perPage: 20) {
-                media(search: ${', type: ANIME, isAdult: false, sort: SEARCH_MATCH) {
+                media(search: ${'$'}search, type: ANIME, isAdult: false, sort: SEARCH_MATCH) {
                   id title { romaji english native } coverImage { large extraLarge }
                   startDate { year } episodes
                 }
@@ -404,8 +404,8 @@ class SenpaiStreamProvider : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val id = Regex("/anilist/(\\d+)").find(url)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return null
         val gql = """
-            query (\$id: Int) {
-              Media(id: \$id, type: ANIME) {
+            query (${'$'}id: Int) {
+              Media(id: ${'$'}id, type: ANIME) {
                 id title { romaji english native } description(asHtml: false)
                 coverImage { large extraLarge } bannerImage startDate { year }
                 episodes duration genres synonyms
@@ -494,8 +494,8 @@ class SenpaiStreamProvider : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val id = Regex("/anilist/(\\d+)").find(url)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return null
         val gql = """
-            query (\$id: Int) {
-              Media(id: \$id, type: ANIME) {
+            query (${'$'}id: Int) {
+              Media(id: ${'$'}id, type: ANIME) {
                 id title { romaji english native } description(asHtml: false)
                 coverImage { large extraLarge } bannerImage startDate { year }
                 episodes duration genres synonyms
@@ -609,7 +609,7 @@ class SenpaiStreamProvider : MainAPI() {
 }
 }search: String) {
               Page(page: 1, perPage: 20) {
-                media(search: ${', type: ANIME, isAdult: false, sort: SEARCH_MATCH) {
+                media(search: ${'$'}search, type: ANIME, isAdult: false, sort: SEARCH_MATCH) {
                   id title { romaji english native } coverImage { large extraLarge }
                   startDate { year } episodes
                 }
@@ -642,8 +642,8 @@ class SenpaiStreamProvider : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val id = Regex("/anilist/(\\d+)").find(url)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return null
         val gql = """
-            query (${': Int) {
-              Media(id: \$id, type: ANIME) {
+            query (${'$'}id: Int) {
+              Media(id: ${'$'}id, type: ANIME) {
                 id title { romaji english native } description(asHtml: false)
                 coverImage { large extraLarge } bannerImage startDate { year }
                 episodes duration genres synonyms
@@ -732,8 +732,8 @@ class SenpaiStreamProvider : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val id = Regex("/anilist/(\\d+)").find(url)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return null
         val gql = """
-            query (\$id: Int) {
-              Media(id: \$id, type: ANIME) {
+            query (${'$'}id: Int) {
+              Media(id: ${'$'}id, type: ANIME) {
                 id title { romaji english native } description(asHtml: false)
                 coverImage { large extraLarge } bannerImage startDate { year }
                 episodes duration genres synonyms
@@ -790,7 +790,7 @@ class SenpaiStreamProvider : MainAPI() {
     }
 }
 }id: Int) {
-              Media(id: ${', type: ANIME) {
+              Media(id: ${'$'}id, type: ANIME) {
                 id title { romaji english native } description(asHtml: false)
                 coverImage { large extraLarge } bannerImage startDate { year }
                 episodes duration genres synonyms
@@ -879,8 +879,8 @@ class SenpaiStreamProvider : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val id = Regex("/anilist/(\\d+)").find(url)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return null
         val gql = """
-            query (\$id: Int) {
-              Media(id: \$id, type: ANIME) {
+            query (${'$'}id: Int) {
+              Media(id: ${'$'}id, type: ANIME) {
                 id title { romaji english native } description(asHtml: false)
                 coverImage { large extraLarge } bannerImage startDate { year }
                 episodes duration genres synonyms
@@ -1025,8 +1025,8 @@ class SenpaiStreamProvider : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val id = Regex("/anilist/(\\d+)").find(url)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return null
         val gql = """
-            query (${': Int) {
-              Media(id: \$id, type: ANIME) {
+            query (${'$'}id: Int) {
+              Media(id: ${'$'}id, type: ANIME) {
                 id title { romaji english native } description(asHtml: false)
                 coverImage { large extraLarge } bannerImage startDate { year }
                 episodes duration genres synonyms
@@ -1083,7 +1083,7 @@ class SenpaiStreamProvider : MainAPI() {
     }
 }
 }id: Int) {
-              Media(id: ${', type: ANIME) {
+              Media(id: ${'$'}id, type: ANIME) {
                 id title { romaji english native } description(asHtml: false)
                 coverImage { large extraLarge } bannerImage startDate { year }
                 episodes duration genres synonyms
