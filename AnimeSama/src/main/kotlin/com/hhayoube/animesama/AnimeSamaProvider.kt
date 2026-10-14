@@ -101,7 +101,7 @@ class AnimeSamaProvider : MainAPI() {
             duration = item.optInt("duration", 0).takeIf { it > 0 }
             tags = item.optJSONArray("genres")?.let { arr -> (0 until arr.length()).mapNotNull { arr.optString(it).takeIf(String::isNotBlank) } }
             synonyms = item.optJSONArray("synonyms")?.let { arr -> (0 until arr.length()).mapNotNull { arr.optString(it).takeIf(String::isNotBlank) } }
-            episodes = manualEpisodes.mapIndexed { index, episodeUrl ->
+            episodes[DubStatus.Subbed] = manualEpisodes.mapIndexed { index, episodeUrl ->
                 newEpisode(episodeUrl) {
                     name = "Épisode ${index + 1}"
                     episode = index + 1
