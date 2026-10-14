@@ -117,15 +117,21 @@ class AnimeSamaProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit,
     ): Boolean {
+        // Accept only direct media URLs from a source the user is authorized to access.
+        // A normal webpage URL is not a playable video stream and must not be advertised as one.
         val uri = try { java.net.URI(data) } catch (_: Exception) { return false }
         if (uri.scheme !in listOf("http", "https") || uri.host.isNullOrBlank()) return false
+
         val path = uri.path.orEmpty().lowercase()
         val type = when {
             path.endsWith(".m3u8") -> ExtractorLinkType.M3U8
             path.endsWith(".mpd") -> ExtractorLinkType.DASH
-            else -> ExtractorLinkType.VIDEO
+            path.endsWith(".mp4") || path.endsWith(".m4v") ||
+                path.endsWith(".webm") || path.endsWith(".mkv") -> ExtractorLinkType.VIDEO
+            else -> return false
         }
-        callback(newExtractorLink(source = name, name = "Lien manuel", url = data, type = type))
+
+        callback(newExtractorLink(source = name, name = "Vidéo directe", url = data, type = type))
         return true
     }
 }
