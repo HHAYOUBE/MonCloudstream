@@ -188,7 +188,7 @@ class SenpaiStreamProvider : MainAPI() {
 
     private fun isOfficialStreamingHost(host: String): Boolean {
         val allowedDomains = setOf(
-            "youtube.com", "youtu.be", "bilibili.com", "bilibili.tv",
+            "bilibili.com", "bilibili.tv",
             "crunchyroll.com", "hulu.com", "netflix.com", "primevideo.com",
             "amazon.com", "disneyplus.com", "hidive.com",
             "animationdigitalnetwork.fr", "animationdigitalnetwork.com"
