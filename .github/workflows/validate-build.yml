@@ -28,6 +28,9 @@ jobs:
       - name: Validate editable source catalog
         run: python3 scripts/validate_sources.py
 
+      - name: Validate anime extension invariants
+        run: python3 scripts/validate_extensions.py
+
       - name: Setup JDK 17
         uses: actions/setup-java@v5
         with:
