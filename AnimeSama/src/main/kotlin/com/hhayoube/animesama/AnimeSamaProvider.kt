@@ -45,13 +45,13 @@ class AnimeSamaProvider : MainAPI() {
         return response
     }
 
-    override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        if (page < 1) return newHomePageResponse(request.name, emptyList())
+    override suspend fun getMainPage(page: Int, pageRequest: MainPageRequest): HomePageResponse {
+        if (page < 1) return newHomePageResponse(pageRequest.name, emptyList())
 
         val gql = """
-            query ($page: Int, $sort: [MediaSort]) {
-              Page(page: $page, perPage: 20) {
-                media(sort: $sort, type: ANIME, isAdult: false) {
+            query (${' {
+              Page(page: ${' {
+                media(sort: ${', isAdult: false) {
                   id title { romaji english native } coverImage { large extraLarge }
                   startDate { year } episodes
                 }
@@ -60,12 +60,12 @@ class AnimeSamaProvider : MainAPI() {
         """.trimIndent()
 
         val root = try {
-            request(gql, mapOf("page" to page, "sort" to listOf(request.data)))
+            request(gql, mapOf("page" to page, "sort" to listOf(pageRequest.data)))
         } catch (_: Exception) {
-            return newHomePageResponse(request.name, emptyList())
+            return newHomePageResponse(pageRequest.name, emptyList())
         }
         val media = root.optJSONObject("data")?.optJSONObject("Page")?.optJSONArray("media")
-            ?: return newHomePageResponse(request.name, emptyList())
+            ?: return newHomePageResponse(pageRequest.name, emptyList())
 
         val results = (0 until media.length()).mapNotNull { i ->
             val item = media.optJSONObject(i) ?: return@mapNotNull null
@@ -86,7 +86,443 @@ class AnimeSamaProvider : MainAPI() {
                 otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
             }
         }
-        return newHomePageResponse(request.name, results)
+        return newHomePageResponse(pageRequest.name, results)
+    }
+
+}page: Int, ${' {
+              Page(page: $page, perPage: 20) {
+                media(sort: $sort, type: ANIME, isAdult: false) {
+                  id title { romaji english native } coverImage { large extraLarge }
+                  startDate { year } episodes
+                }
+              }
+            }
+        """.trimIndent()
+
+        val root = try {
+            request(gql, mapOf("page" to page, "sort" to listOf(pageRequest.data)))
+        } catch (_: Exception) {
+            return newHomePageResponse(pageRequest.name, emptyList())
+        }
+        val media = root.optJSONObject("data")?.optJSONObject("Page")?.optJSONArray("media")
+            ?: return newHomePageResponse(pageRequest.name, emptyList())
+
+        val results = (0 until media.length()).mapNotNull { i ->
+            val item = media.optJSONObject(i) ?: return@mapNotNull null
+            val titles = item.optJSONObject("title") ?: JSONObject()
+            val title = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("romaji").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+                ?: return@mapNotNull null
+            val id = item.optInt("id", 0)
+            if (id <= 0) return@mapNotNull null
+            val cover = item.optJSONObject("coverImage")
+            val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
+                ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
+            newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
+                posterUrl = poster
+                year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
+                otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+            }
+        }
+        return newHomePageResponse(pageRequest.name, results)
+    }
+
+}sort: [MediaSort]) {
+              Page(page: $page, perPage: 20) {
+                media(sort: $sort, type: ANIME, isAdult: false) {
+                  id title { romaji english native } coverImage { large extraLarge }
+                  startDate { year } episodes
+                }
+              }
+            }
+        """.trimIndent()
+
+        val root = try {
+            request(gql, mapOf("page" to page, "sort" to listOf(pageRequest.data)))
+        } catch (_: Exception) {
+            return newHomePageResponse(pageRequest.name, emptyList())
+        }
+        val media = root.optJSONObject("data")?.optJSONObject("Page")?.optJSONArray("media")
+            ?: return newHomePageResponse(pageRequest.name, emptyList())
+
+        val results = (0 until media.length()).mapNotNull { i ->
+            val item = media.optJSONObject(i) ?: return@mapNotNull null
+            val titles = item.optJSONObject("title") ?: JSONObject()
+            val title = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("romaji").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+                ?: return@mapNotNull null
+            val id = item.optInt("id", 0)
+            if (id <= 0) return@mapNotNull null
+            val cover = item.optJSONObject("coverImage")
+            val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
+                ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
+            newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
+                posterUrl = poster
+                year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
+                otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+            }
+        }
+        return newHomePageResponse(pageRequest.name, results)
+    }
+
+}page, perPage: 20) {
+                media(sort: $sort, type: ANIME, isAdult: false) {
+                  id title { romaji english native } coverImage { large extraLarge }
+                  startDate { year } episodes
+                }
+              }
+            }
+        """.trimIndent()
+
+        val root = try {
+            request(gql, mapOf("page" to page, "sort" to listOf(pageRequest.data)))
+        } catch (_: Exception) {
+            return newHomePageResponse(pageRequest.name, emptyList())
+        }
+        val media = root.optJSONObject("data")?.optJSONObject("Page")?.optJSONArray("media")
+            ?: return newHomePageResponse(pageRequest.name, emptyList())
+
+        val results = (0 until media.length()).mapNotNull { i ->
+            val item = media.optJSONObject(i) ?: return@mapNotNull null
+            val titles = item.optJSONObject("title") ?: JSONObject()
+            val title = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("romaji").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+                ?: return@mapNotNull null
+            val id = item.optInt("id", 0)
+            if (id <= 0) return@mapNotNull null
+            val cover = item.optJSONObject("coverImage")
+            val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
+                ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
+            newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
+                posterUrl = poster
+                year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
+                otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+            }
+        }
+        return newHomePageResponse(pageRequest.name, results)
+    }
+
+}page: Int, ${' {
+              Page(page: $page, perPage: 20) {
+                media(sort: $sort, type: ANIME, isAdult: false) {
+                  id title { romaji english native } coverImage { large extraLarge }
+                  startDate { year } episodes
+                }
+              }
+            }
+        """.trimIndent()
+
+        val root = try {
+            request(gql, mapOf("page" to page, "sort" to listOf(pageRequest.data)))
+        } catch (_: Exception) {
+            return newHomePageResponse(pageRequest.name, emptyList())
+        }
+        val media = root.optJSONObject("data")?.optJSONObject("Page")?.optJSONArray("media")
+            ?: return newHomePageResponse(pageRequest.name, emptyList())
+
+        val results = (0 until media.length()).mapNotNull { i ->
+            val item = media.optJSONObject(i) ?: return@mapNotNull null
+            val titles = item.optJSONObject("title") ?: JSONObject()
+            val title = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("romaji").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+                ?: return@mapNotNull null
+            val id = item.optInt("id", 0)
+            if (id <= 0) return@mapNotNull null
+            val cover = item.optJSONObject("coverImage")
+            val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
+                ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
+            newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
+                posterUrl = poster
+                year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
+                otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+            }
+        }
+        return newHomePageResponse(pageRequest.name, results)
+    }
+
+}sort: [MediaSort]) {
+              Page(page: $page, perPage: 20) {
+                media(sort: $sort, type: ANIME, isAdult: false) {
+                  id title { romaji english native } coverImage { large extraLarge }
+                  startDate { year } episodes
+                }
+              }
+            }
+        """.trimIndent()
+
+        val root = try {
+            request(gql, mapOf("page" to page, "sort" to listOf(pageRequest.data)))
+        } catch (_: Exception) {
+            return newHomePageResponse(pageRequest.name, emptyList())
+        }
+        val media = root.optJSONObject("data")?.optJSONObject("Page")?.optJSONArray("media")
+            ?: return newHomePageResponse(pageRequest.name, emptyList())
+
+        val results = (0 until media.length()).mapNotNull { i ->
+            val item = media.optJSONObject(i) ?: return@mapNotNull null
+            val titles = item.optJSONObject("title") ?: JSONObject()
+            val title = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("romaji").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+                ?: return@mapNotNull null
+            val id = item.optInt("id", 0)
+            if (id <= 0) return@mapNotNull null
+            val cover = item.optJSONObject("coverImage")
+            val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
+                ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
+            newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
+                posterUrl = poster
+                year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
+                otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+            }
+        }
+        return newHomePageResponse(pageRequest.name, results)
+    }
+
+}sort, type: ANIME, isAdult: false) {
+                  id title { romaji english native } coverImage { large extraLarge }
+                  startDate { year } episodes
+                }
+              }
+            }
+        """.trimIndent()
+
+        val root = try {
+            request(gql, mapOf("page" to page, "sort" to listOf(pageRequest.data)))
+        } catch (_: Exception) {
+            return newHomePageResponse(pageRequest.name, emptyList())
+        }
+        val media = root.optJSONObject("data")?.optJSONObject("Page")?.optJSONArray("media")
+            ?: return newHomePageResponse(pageRequest.name, emptyList())
+
+        val results = (0 until media.length()).mapNotNull { i ->
+            val item = media.optJSONObject(i) ?: return@mapNotNull null
+            val titles = item.optJSONObject("title") ?: JSONObject()
+            val title = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("romaji").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+                ?: return@mapNotNull null
+            val id = item.optInt("id", 0)
+            if (id <= 0) return@mapNotNull null
+            val cover = item.optJSONObject("coverImage")
+            val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
+                ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
+            newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
+                posterUrl = poster
+                year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
+                otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+            }
+        }
+        return newHomePageResponse(pageRequest.name, results)
+    }
+
+}page: Int, ${' {
+              Page(page: $page, perPage: 20) {
+                media(sort: $sort, type: ANIME, isAdult: false) {
+                  id title { romaji english native } coverImage { large extraLarge }
+                  startDate { year } episodes
+                }
+              }
+            }
+        """.trimIndent()
+
+        val root = try {
+            request(gql, mapOf("page" to page, "sort" to listOf(pageRequest.data)))
+        } catch (_: Exception) {
+            return newHomePageResponse(pageRequest.name, emptyList())
+        }
+        val media = root.optJSONObject("data")?.optJSONObject("Page")?.optJSONArray("media")
+            ?: return newHomePageResponse(pageRequest.name, emptyList())
+
+        val results = (0 until media.length()).mapNotNull { i ->
+            val item = media.optJSONObject(i) ?: return@mapNotNull null
+            val titles = item.optJSONObject("title") ?: JSONObject()
+            val title = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("romaji").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+                ?: return@mapNotNull null
+            val id = item.optInt("id", 0)
+            if (id <= 0) return@mapNotNull null
+            val cover = item.optJSONObject("coverImage")
+            val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
+                ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
+            newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
+                posterUrl = poster
+                year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
+                otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+            }
+        }
+        return newHomePageResponse(pageRequest.name, results)
+    }
+
+}sort: [MediaSort]) {
+              Page(page: $page, perPage: 20) {
+                media(sort: $sort, type: ANIME, isAdult: false) {
+                  id title { romaji english native } coverImage { large extraLarge }
+                  startDate { year } episodes
+                }
+              }
+            }
+        """.trimIndent()
+
+        val root = try {
+            request(gql, mapOf("page" to page, "sort" to listOf(pageRequest.data)))
+        } catch (_: Exception) {
+            return newHomePageResponse(pageRequest.name, emptyList())
+        }
+        val media = root.optJSONObject("data")?.optJSONObject("Page")?.optJSONArray("media")
+            ?: return newHomePageResponse(pageRequest.name, emptyList())
+
+        val results = (0 until media.length()).mapNotNull { i ->
+            val item = media.optJSONObject(i) ?: return@mapNotNull null
+            val titles = item.optJSONObject("title") ?: JSONObject()
+            val title = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("romaji").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+                ?: return@mapNotNull null
+            val id = item.optInt("id", 0)
+            if (id <= 0) return@mapNotNull null
+            val cover = item.optJSONObject("coverImage")
+            val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
+                ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
+            newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
+                posterUrl = poster
+                year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
+                otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+            }
+        }
+        return newHomePageResponse(pageRequest.name, results)
+    }
+
+}page, perPage: 20) {
+                media(sort: $sort, type: ANIME, isAdult: false) {
+                  id title { romaji english native } coverImage { large extraLarge }
+                  startDate { year } episodes
+                }
+              }
+            }
+        """.trimIndent()
+
+        val root = try {
+            request(gql, mapOf("page" to page, "sort" to listOf(pageRequest.data)))
+        } catch (_: Exception) {
+            return newHomePageResponse(pageRequest.name, emptyList())
+        }
+        val media = root.optJSONObject("data")?.optJSONObject("Page")?.optJSONArray("media")
+            ?: return newHomePageResponse(pageRequest.name, emptyList())
+
+        val results = (0 until media.length()).mapNotNull { i ->
+            val item = media.optJSONObject(i) ?: return@mapNotNull null
+            val titles = item.optJSONObject("title") ?: JSONObject()
+            val title = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("romaji").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+                ?: return@mapNotNull null
+            val id = item.optInt("id", 0)
+            if (id <= 0) return@mapNotNull null
+            val cover = item.optJSONObject("coverImage")
+            val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
+                ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
+            newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
+                posterUrl = poster
+                year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
+                otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+            }
+        }
+        return newHomePageResponse(pageRequest.name, results)
+    }
+
+}page: Int, ${' {
+              Page(page: $page, perPage: 20) {
+                media(sort: $sort, type: ANIME, isAdult: false) {
+                  id title { romaji english native } coverImage { large extraLarge }
+                  startDate { year } episodes
+                }
+              }
+            }
+        """.trimIndent()
+
+        val root = try {
+            request(gql, mapOf("page" to page, "sort" to listOf(pageRequest.data)))
+        } catch (_: Exception) {
+            return newHomePageResponse(pageRequest.name, emptyList())
+        }
+        val media = root.optJSONObject("data")?.optJSONObject("Page")?.optJSONArray("media")
+            ?: return newHomePageResponse(pageRequest.name, emptyList())
+
+        val results = (0 until media.length()).mapNotNull { i ->
+            val item = media.optJSONObject(i) ?: return@mapNotNull null
+            val titles = item.optJSONObject("title") ?: JSONObject()
+            val title = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("romaji").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+                ?: return@mapNotNull null
+            val id = item.optInt("id", 0)
+            if (id <= 0) return@mapNotNull null
+            val cover = item.optJSONObject("coverImage")
+            val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
+                ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
+            newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
+                posterUrl = poster
+                year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
+                otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+            }
+        }
+        return newHomePageResponse(pageRequest.name, results)
+    }
+
+}sort: [MediaSort]) {
+              Page(page: $page, perPage: 20) {
+                media(sort: $sort, type: ANIME, isAdult: false) {
+                  id title { romaji english native } coverImage { large extraLarge }
+                  startDate { year } episodes
+                }
+              }
+            }
+        """.trimIndent()
+
+        val root = try {
+            request(gql, mapOf("page" to page, "sort" to listOf(pageRequest.data)))
+        } catch (_: Exception) {
+            return newHomePageResponse(pageRequest.name, emptyList())
+        }
+        val media = root.optJSONObject("data")?.optJSONObject("Page")?.optJSONArray("media")
+            ?: return newHomePageResponse(pageRequest.name, emptyList())
+
+        val results = (0 until media.length()).mapNotNull { i ->
+            val item = media.optJSONObject(i) ?: return@mapNotNull null
+            val titles = item.optJSONObject("title") ?: JSONObject()
+            val title = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("romaji").takeIf { it.isNotBlank() && it != "null" }
+                ?: titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+                ?: return@mapNotNull null
+            val id = item.optInt("id", 0)
+            if (id <= 0) return@mapNotNull null
+            val cover = item.optJSONObject("coverImage")
+            val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
+                ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
+            newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
+                posterUrl = poster
+                year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
+                otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+            }
+        }
+        return newHomePageResponse(pageRequest.name, results)
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
