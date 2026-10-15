@@ -145,6 +145,8 @@ class AnimeSamaProvider : MainAPI() {
         val cover = item.optJSONObject("coverImage")
         val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
             ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
+        // AniList can provide episode pages from licensed streaming platforms.
+        // Keep only HTTPS links on known official providers; availability may vary by region/account.
         val officialVideoEpisodes = item.optJSONArray("streamingEpisodes")?.let { array ->
             (0 until array.length()).mapNotNull { index ->
                 val stream = array.optJSONObject(index) ?: return@mapNotNull null
@@ -152,11 +154,11 @@ class AnimeSamaProvider : MainAPI() {
                     ?: return@mapNotNull null
                 val streamUri = try { java.net.URI(streamUrl) } catch (_: Exception) { return@mapNotNull null }
                 val host = streamUri.host?.lowercase() ?: return@mapNotNull null
-                val isYouTube = host == "youtu.be" || host == "youtube.com" || host.endsWith(".youtube.com")
-                if (streamUri.scheme != "https" || !isYouTube) return@mapNotNull null
+                if (streamUri.scheme != "https" || !isOfficialStreamingHost(host)) return@mapNotNull null
                 val streamTitle = stream.optString("title").takeIf { it.isNotBlank() && it != "null" }
-                    ?: "Vidéo YouTube ${index + 1}"
-                streamTitle to streamUrl
+                    ?: "Épisode ${index + 1}"
+                val site = stream.optString("site").takeIf { it.isNotBlank() && it != "null" }
+                (if (site != null) "$site — $streamTitle" else streamTitle) to streamUrl
             }
         } ?: emptyList()
         val manualEpisodes = ManualEpisodeLinks.links[id].orEmpty()
@@ -183,6 +185,17 @@ class AnimeSamaProvider : MainAPI() {
         }
     }
 
+
+    private fun isOfficialStreamingHost(host: String): Boolean {
+        val allowedDomains = setOf(
+            "youtube.com", "youtu.be", "bilibili.com", "bilibili.tv",
+            "crunchyroll.com", "hulu.com", "netflix.com", "primevideo.com",
+            "amazon.com", "disneyplus.com", "hidive.com",
+            "animationdigitalnetwork.fr", "animationdigitalnetwork.com"
+        )
+        return allowedDomains.any { host == it || host.endsWith(".$it") }
+    }
+
     override suspend fun loadLinks(
         data: String,
         isCasting: Boolean,
@@ -195,23 +208,23 @@ class AnimeSamaProvider : MainAPI() {
         if (uri.scheme !in listOf("http", "https") || uri.host.isNullOrBlank()) return false
 
         val host = uri.host.lowercase()
-        val isYouTube = host == "youtu.be" || host == "youtube.com" || host.endsWith(".youtube.com")
-        if (isYouTube) {
-            // AniList-listed YouTube pages are passed to CloudStream's supported extractor.
-            // No DRM, login, or paywall bypass is attempted.
-            return loadExtractor(data, mainUrl, subtitleCallback, callback)
-        }
-
         val path = uri.path.orEmpty().lowercase()
         val type = when {
             path.endsWith(".m3u8") -> ExtractorLinkType.M3U8
             path.endsWith(".mpd") -> ExtractorLinkType.DASH
             path.endsWith(".mp4") || path.endsWith(".m4v") ||
                 path.endsWith(".webm") || path.endsWith(".mkv") -> ExtractorLinkType.VIDEO
-            else -> return false
+            else -> null
         }
 
-        callback(newExtractorLink(source = name, name = "Vidéo directe", url = data, type = type))
-        return true
+        if (type != null) {
+            callback(newExtractorLink(source = name, name = "Vidéo directe", url = data, type = type))
+            return true
+        }
+
+        // Let CloudStream handle supported official platform pages. No DRM, login,
+        // subscription, or paywall bypass is attempted.
+        if (!isOfficialStreamingHost(host)) return false
+        return loadExtractor(data, mainUrl, subtitleCallback, callback)
     }
 }
