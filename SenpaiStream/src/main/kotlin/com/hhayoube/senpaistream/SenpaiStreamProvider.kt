@@ -12,6 +12,8 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.newAnimeLoadResponse
+import com.lagradost.cloudstream3.newMovieLoadResponse
+import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newAnimeSearchResponse
 import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.utils.ExtractorLink
@@ -28,7 +30,7 @@ class SenpaiStreamProvider : MainAPI() {
     override var mainUrl = SenpaiStreamConfig.baseUrl
     override var name = "Senpai-Stream"
     override var lang = "fr"
-    override val supportedTypes = setOf(TvType.Anime)
+    override val supportedTypes = setOf(TvType.Anime, TvType.Movie)
     private val endpoint = "https://graphql.anilist.co"
 
     override val hasMainPage = true
@@ -46,7 +48,7 @@ class SenpaiStreamProvider : MainAPI() {
               Page(page: ${'$'}page, perPage: 20) {
                 media(sort: ${'$'}sort, type: ANIME, isAdult: false) {
                   id title { romaji english native } coverImage { large extraLarge }
-                  startDate { year } episodes
+                  startDate { year } episodes format
                 }
               }
             }
@@ -70,11 +72,18 @@ class SenpaiStreamProvider : MainAPI() {
             val cover = item.optJSONObject("coverImage")
             val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
                 ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
-            newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
-                posterUrl = poster
-                year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
-                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
-                otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+            if (item.optString("format") == "MOVIE") {
+                newMovieSearchResponse(title, "$mainUrl/anilist/$id", TvType.Movie) {
+                    posterUrl = poster
+                    year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                }
+            } else {
+                newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
+                    posterUrl = poster
+                    year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                    item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
+                    otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+                }
             }
         }
         return newHomePageResponse(pageRequest, results, hasNext = media.length() == 20)
@@ -165,15 +174,41 @@ class SenpaiStreamProvider : MainAPI() {
         val episodeSources = (officialVideoEpisodes + manualEpisodes.mapIndexed { index, episodeUrl ->
             "Épisode manuel ${index + 1}" to episodeUrl
         }).distinctBy { it.second }
+        val banner = item.optString("bannerImage").takeIf { it.isNotBlank() && it != "null" }
+        val year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+        val plot = item.optString("description").takeIf { it.isNotBlank() && it != "null" }
+        val duration = item.optInt("duration", 0).takeIf { it > 0 }
+        val genres = item.optJSONArray("genres")?.let { arr ->
+            (0 until arr.length()).mapNotNull { arr.optString(it).takeIf(String::isNotBlank) }
+        }
+        val isMovie = item.optString("format") == "MOVIE"
+
+        if (isMovie) {
+            return newMovieLoadResponse(
+                title,
+                "$mainUrl/anilist/$id",
+                TvType.Movie,
+                episodeSources.firstOrNull()?.second.orEmpty()
+            ) {
+                posterUrl = poster
+                backgroundPosterUrl = banner
+                this.year = year
+                this.plot = plot
+                this.duration = duration
+                this.tags = genres
+                comingSoon = episodeSources.isEmpty()
+            }
+        }
+
         return newAnimeLoadResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
             engName = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
             japName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
             posterUrl = poster
-            backgroundPosterUrl = item.optString("bannerImage").takeIf { it.isNotBlank() && it != "null" }
-            year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
-            plot = item.optString("description").takeIf { it.isNotBlank() && it != "null" }
-            duration = item.optInt("duration", 0).takeIf { it > 0 }
-            tags = item.optJSONArray("genres")?.let { arr -> (0 until arr.length()).mapNotNull { arr.optString(it).takeIf(String::isNotBlank) } }
+            backgroundPosterUrl = banner
+            this.year = year
+            this.plot = plot
+            this.duration = duration
+            this.tags = genres
             synonyms = item.optJSONArray("synonyms")?.let { arr -> (0 until arr.length()).mapNotNull { arr.optString(it).takeIf(String::isNotBlank) } }
             episodes[DubStatus.Subbed] = episodeSources.mapIndexed { index, (episodeTitle, episodeUrl) ->
                 newEpisode(episodeUrl) {
@@ -181,7 +216,7 @@ class SenpaiStreamProvider : MainAPI() {
                     episode = index + 1
                 }
             }
-            comingSoon = false
+            comingSoon = episodeSources.isEmpty()
         }
     }
 
