@@ -181,7 +181,7 @@ class AnimeSamaProvider : MainAPI() {
                     episode = index + 1
                 }
             }
-            comingSoon = false
+            comingSoon = episodeSources.isEmpty()
         }
     }
 
