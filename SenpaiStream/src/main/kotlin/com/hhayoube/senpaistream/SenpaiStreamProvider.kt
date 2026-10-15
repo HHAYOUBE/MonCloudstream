@@ -76,7 +76,7 @@ class SenpaiStreamProvider : MainAPI() {
                 otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
             }
         }
-        return newHomePageResponse(pageRequest.name, results)
+        return newHomePageResponse(pageRequest, results, hasNext = media.length() == 20)
     }
 
     private suspend fun request(query: String, variables: Map<String, Any?>): JSONObject {
