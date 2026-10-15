@@ -2,7 +2,6 @@
 """Static checks for the AnimeSama and Senpai-Stream CloudStream providers."""
 from pathlib import Path
 import json
-import re
 import sys
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -31,6 +30,10 @@ def main() -> None:
             fail(f"{name} is missing its official-host allowlist.")
         if "newextractorlink" not in lowered or "loadlinks(" not in lowered:
             fail(f"{name} is missing its CloudStream link-loading implementation.")
+        if 'uri.scheme != "https" || uri.host.isnullorblank()' not in lowered:
+            fail(f"{name} must reject non-HTTPS direct video links.")
+        if "comingsoon = episodesources.isempty()" not in lowered:
+            fail(f"{name} must mark entries without sources as coming soon.")
 
     senpai = loaded["SenpaiStream"]
     for token in ("TvType.Movie", "newMovieSearchResponse", "newMovieLoadResponse", "format"):
