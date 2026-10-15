@@ -17,6 +17,7 @@ import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.newExtractorLink
+import com.lagradost.cloudstream3.utils.loadExtractor
 import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.nicehttp.RequestBodyTypes
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -130,7 +131,7 @@ class SenpaiStreamProvider : MainAPI() {
               Media(id: ${'$'}id, type: ANIME) {
                 id title { romaji english native } description(asHtml: false)
                 coverImage { large extraLarge } bannerImage startDate { year }
-                episodes duration genres synonyms
+                episodes duration genres synonyms streamingEpisodes { title thumbnail url site }
               }
             }
         """.trimIndent()
@@ -144,7 +145,24 @@ class SenpaiStreamProvider : MainAPI() {
         val cover = item.optJSONObject("coverImage")
         val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
             ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
+        val officialVideoEpisodes = item.optJSONArray("streamingEpisodes")?.let { array ->
+            (0 until array.length()).mapNotNull { index ->
+                val stream = array.optJSONObject(index) ?: return@mapNotNull null
+                val streamUrl = stream.optString("url").takeIf { it.isNotBlank() && it != "null" }
+                    ?: return@mapNotNull null
+                val streamUri = try { java.net.URI(streamUrl) } catch (_: Exception) { return@mapNotNull null }
+                val host = streamUri.host?.lowercase() ?: return@mapNotNull null
+                val isYouTube = host == "youtu.be" || host == "youtube.com" || host.endsWith(".youtube.com")
+                if (streamUri.scheme != "https" || !isYouTube) return@mapNotNull null
+                val streamTitle = stream.optString("title").takeIf { it.isNotBlank() && it != "null" }
+                    ?: "Vidéo YouTube ${index + 1}"
+                streamTitle to streamUrl
+            }
+        } ?: emptyList()
         val manualEpisodes = ManualEpisodeLinks.links[id].orEmpty()
+        val episodeSources = (officialVideoEpisodes + manualEpisodes.mapIndexed { index, episodeUrl ->
+            "Épisode manuel ${index + 1}" to episodeUrl
+        }).distinctBy { it.second }
         return newAnimeLoadResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
             engName = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
             japName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
@@ -155,9 +173,9 @@ class SenpaiStreamProvider : MainAPI() {
             duration = item.optInt("duration", 0).takeIf { it > 0 }
             tags = item.optJSONArray("genres")?.let { arr -> (0 until arr.length()).mapNotNull { arr.optString(it).takeIf(String::isNotBlank) } }
             synonyms = item.optJSONArray("synonyms")?.let { arr -> (0 until arr.length()).mapNotNull { arr.optString(it).takeIf(String::isNotBlank) } }
-            episodes[DubStatus.Subbed] = manualEpisodes.mapIndexed { index, episodeUrl ->
+            episodes[DubStatus.Subbed] = episodeSources.mapIndexed { index, (episodeTitle, episodeUrl) ->
                 newEpisode(episodeUrl) {
-                    name = "Épisode ${index + 1}"
+                    name = episodeTitle
                     episode = index + 1
                 }
             }
@@ -175,6 +193,14 @@ class SenpaiStreamProvider : MainAPI() {
         // A normal webpage URL is not a playable video stream and must not be advertised as one.
         val uri = try { java.net.URI(data) } catch (_: Exception) { return false }
         if (uri.scheme !in listOf("http", "https") || uri.host.isNullOrBlank()) return false
+
+        val host = uri.host.lowercase()
+        val isYouTube = host == "youtu.be" || host == "youtube.com" || host.endsWith(".youtube.com")
+        if (isYouTube) {
+            // AniList-listed YouTube pages are passed to CloudStream's supported extractor.
+            // No DRM, login, or paywall bypass is attempted.
+            return loadExtractor(data, mainUrl, subtitleCallback, callback)
+        }
 
         val path = uri.path.orEmpty().lowercase()
         val type = when {
