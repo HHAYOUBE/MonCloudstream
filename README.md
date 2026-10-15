@@ -12,14 +12,14 @@ Ce dépôt contient les extensions existantes et des modules personnels.
 - AnimeSama
 - SenpaiStream
 
-**État important :** AnimeSama et SenpaiStream utilisent AniList pour la recherche, les fiches et les pages de tendances. Les fiches chargent les liens d’épisodes YouTube publiés dans le champ `streamingEpisodes` d’AniList lorsqu’ils sont disponibles ; CloudStream essaie ensuite son extracteur YouTube intégré. La disponibilité varie selon l’anime et la région. AniList ne fournit pas un catalogue complet des épisodes, et cette intégration ne contourne ni DRM, ni connexion, ni abonnement.
+**État important :** AnimeSama et SenpaiStream utilisent AniList pour la recherche, les fiches et les pages de tendances. Les fiches peuvent afficher des liens d’épisodes provenant de plateformes de diffusion officielles référencées par AniList, lorsqu’ils sont disponibles. La disponibilité varie selon l’anime et la région. AniList ne fournit pas un catalogue complet des épisodes, et cette intégration ne contourne ni DRM, ni connexion, ni abonnement.
 
 ## État technique des extensions anime
 
 - Recherche, fiches et pages de tendances : données de catalogue publiques d’AniList.
 - Les identifiants internes sont des identifiants AniList, pas des URL d’épisodes.
 - Aucun épisode fictif n’est généré pour simuler une lecture fonctionnelle.
-- Les liens YouTube référencés par AniList sont envoyés à l’extracteur CloudStream intégré ; la lecture dépend de la disponibilité publique de la vidéo et de la prise en charge par l’extracteur.
+- Les liens de plateformes officielles référencés par AniList sont envoyés à l’extracteur CloudStream intégré ; la lecture dépend de la disponibilité publique et de la prise en charge par l’extracteur.
 - Les autres liens directs acceptés par `loadLinks` sont limités aux médias HTTP(S) reconnaissables (`.m3u8`, `.mpd`, `.mp4`, `.m4v`, `.webm`, `.mkv`).
 - Les futurs fournisseurs vidéo doivent être isolés dans leurs propres adaptateurs, utiliser des flux autorisés et être testés via la CI avant publication.
 
