@@ -63,3 +63,13 @@ jobs:
             fi
           done
           test -s build/plugins.json
+
+      - name: Upload compiled extensions for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloudstream-packages-${{ github.sha }}
+          path: |
+            build/plugins.json
+            */build/*.cs3
+          if-no-files-found: error
+          retention-days: 14
