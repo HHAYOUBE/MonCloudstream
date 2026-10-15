@@ -12,7 +12,15 @@ Ce dépôt contient les extensions existantes et des modules personnels.
 - AnimeSama
 - SenpaiStream
 
-**État important :** AnimeSama et SenpaiStream sont des squelettes techniques. Leur recherche, leurs fiches et la lecture ne sont pas implémentées ; le nom et l'URL configurée ne suffisent pas à rendre un site lisible dans CloudStream. Toute intégration doit s'appuyer sur des contenus et flux autorisés.
+**État important :** AnimeSama et SenpaiStream utilisent AniList pour la recherche, les fiches et les pages de tendances. AniList fournit des métadonnées, pas des vidéos : la liste réelle des épisodes et la lecture automatique ne sont pas encore connectées à une source vidéo. Une fiche de catalogue ne doit pas être confondue avec un fournisseur de streaming fonctionnel.
+
+## État technique des extensions anime
+
+- Recherche, fiches et pages de tendances : données de catalogue publiques d’AniList.
+- Les identifiants internes sont des identifiants AniList, pas des URL d’épisodes.
+- Aucun épisode fictif n’est généré pour simuler une lecture fonctionnelle.
+- Les liens directs acceptés par `loadLinks` sont limités aux médias HTTP(S) reconnaissables (`.m3u8`, `.mpd`, `.mp4`, `.m4v`, `.webm`, `.mkv`).
+- Les futurs fournisseurs vidéo doivent être isolés dans leurs propres adaptateurs, utiliser des flux autorisés et être testés via la CI avant publication.
 
 ## Installer le dépôt
 
