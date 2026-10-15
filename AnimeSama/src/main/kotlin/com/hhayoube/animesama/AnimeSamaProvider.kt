@@ -162,9 +162,8 @@ class AnimeSamaProvider : MainAPI() {
             }
         } ?: emptyList()
         val manualEpisodes = ManualEpisodeLinks.links[id].orEmpty()
-        val episodeSources = (officialVideoEpisodes + manualEpisodes.mapIndexed { index, episodeUrl ->
-            "Épisode manuel ${index + 1}" to episodeUrl
-        }).distinctBy { it.second }
+            .filter { it.episode > 0 && it.source.isNotBlank() && it.url.isNotBlank() }
+            .filter { it.language.equals("VF", ignoreCase = true) || it.language.equals("VOSTFR", ignoreCase = true) }
         return newAnimeLoadResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
             engName = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
             japName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
@@ -175,13 +174,45 @@ class AnimeSamaProvider : MainAPI() {
             duration = item.optInt("duration", 0).takeIf { it > 0 }
             tags = item.optJSONArray("genres")?.let { arr -> (0 until arr.length()).mapNotNull { arr.optString(it).takeIf(String::isNotBlank) } }
             synonyms = item.optJSONArray("synonyms")?.let { arr -> (0 until arr.length()).mapNotNull { arr.optString(it).takeIf(String::isNotBlank) } }
-            episodes[DubStatus.Subbed] = episodeSources.mapIndexed { index, (episodeTitle, episodeUrl) ->
+            val subbedManualEpisodes = manualEpisodes
+                .filter { it.language.equals("VOSTFR", ignoreCase = true) }
+                .groupBy { it.episode }
+                .map { (episodeNumber, variants) ->
+                    val data = mapOf(
+                        "sources" to variants.map { variant ->
+                            mapOf("name" to variant.source, "url" to variant.url)
+                        }
+                    ).toJson()
+                    newEpisode(data) {
+                        name = "Épisode $episodeNumber — VOSTFR"
+                        episode = episodeNumber
+                    }
+                }
+            val dubbedManualEpisodes = manualEpisodes
+                .filter { it.language.equals("VF", ignoreCase = true) }
+                .groupBy { it.episode }
+                .map { (episodeNumber, variants) ->
+                    val data = mapOf(
+                        "sources" to variants.map { variant ->
+                            mapOf("name" to variant.source, "url" to variant.url)
+                        }
+                    ).toJson()
+                    newEpisode(data) {
+                        name = "Épisode $episodeNumber — VF"
+                        episode = episodeNumber
+                    }
+                }
+            val officialEpisodes = officialVideoEpisodes.mapIndexed { index, (episodeTitle, episodeUrl) ->
                 newEpisode(episodeUrl) {
                     name = episodeTitle
                     episode = index + 1
                 }
             }
-            comingSoon = episodeSources.isEmpty()
+            episodes[DubStatus.Subbed] = officialEpisodes + subbedManualEpisodes
+            if (dubbedManualEpisodes.isNotEmpty()) {
+                episodes[DubStatus.Dubbed] = dubbedManualEpisodes
+            }
+            comingSoon = officialEpisodes.isEmpty() && manualEpisodes.isEmpty()
         }
     }
 
@@ -202,29 +233,54 @@ class AnimeSamaProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit,
     ): Boolean {
-        // Accept only direct media URLs from a source the user is authorized to access.
-        // A normal webpage URL is not a playable video stream and must not be advertised as one.
-        val uri = try { java.net.URI(data) } catch (_: Exception) { return false }
-        if (uri.scheme != "https" || uri.host.isNullOrBlank()) return false
-
-        val host = uri.host.lowercase()
-        val path = uri.path.orEmpty().lowercase()
-        val type = when {
-            path.endsWith(".m3u8") -> ExtractorLinkType.M3U8
-            path.endsWith(".mpd") -> ExtractorLinkType.DASH
-            path.endsWith(".mp4") || path.endsWith(".m4v") ||
-                path.endsWith(".webm") || path.endsWith(".mkv") -> ExtractorLinkType.VIDEO
-            else -> null
+        // Episode data can be either one URL (AniList official links) or a bundle
+        // containing multiple authorized sources for the same VF/VOSTFR episode.
+        val sources: List<Pair<String, String>> = try {
+            val payload = JSONObject(data)
+            val array = payload.optJSONArray("sources")
+            if (array != null) {
+                (0 until array.length()).mapNotNull { index ->
+                    val item = array.optJSONObject(index) ?: return@mapNotNull null
+                    val sourceUrl = item.optString("url").takeIf { it.isNotBlank() && it != "null" }
+                        ?: return@mapNotNull null
+                    val sourceName = item.optString("name").takeIf { it.isNotBlank() && it != "null" }
+                        ?: "Source ${index + 1}"
+                    sourceName to sourceUrl
+                }
+            } else listOf(name to data)
+        } catch (_: Exception) {
+            listOf(name to data)
         }
 
-        if (type != null) {
-            callback(newExtractorLink(source = name, name = "Vidéo directe", url = data, type = type))
-            return true
-        }
+        var found = false
+        for ((sourceName, sourceUrl) in sources) {
+            val uri = try { java.net.URI(sourceUrl) } catch (_: Exception) { continue }
+            if (uri.scheme != "https" || uri.host.isNullOrBlank()) continue
 
-        // Let CloudStream handle supported official platform pages. No DRM, login,
-        // subscription, or paywall bypass is attempted.
-        if (!isOfficialStreamingHost(host)) return false
-        return loadExtractor(data, mainUrl, subtitleCallback, callback)
+            val host = uri.host.lowercase()
+            val path = uri.path.orEmpty().lowercase()
+            val type = when {
+                path.endsWith(".m3u8") -> ExtractorLinkType.M3U8
+                path.endsWith(".mpd") -> ExtractorLinkType.DASH
+                path.endsWith(".mp4") || path.endsWith(".m4v") ||
+                    path.endsWith(".webm") || path.endsWith(".mkv") -> ExtractorLinkType.VIDEO
+                else -> null
+            }
+
+            if (type != null) {
+                callback(newExtractorLink(source = name, name = sourceName, url = sourceUrl, type = type))
+                found = true
+                continue
+            }
+
+            // Official pages only; no DRM, login, subscription, or paywall bypass.
+            if (!isOfficialStreamingHost(host)) continue
+            try {
+                if (loadExtractor(sourceUrl, mainUrl, subtitleCallback, callback)) found = true
+            } catch (_: Exception) {
+                // Keep trying other sources if one extractor fails.
+            }
+        }
+        return found
     }
 }
