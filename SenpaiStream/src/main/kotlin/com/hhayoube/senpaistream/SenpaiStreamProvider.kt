@@ -103,7 +103,11 @@ class SenpaiStreamProvider : MainAPI() {
         val gql = """
             query (${'$'}search: String) {
               Page(page: 1, perPage: 20) {
-                media(search: ${'
+                media(search: ${'search, type: ANIME, isAdult: false) {}search, type: ANIME, isAdult: false) {
+                  id format title { romaji english native } coverImage { large extraLarge }
+                  startDate { year } episodes
+                }
+              }
             }
         """.trimIndent()
         val root = try { request(gql, mapOf("search" to term)) } catch (_: Exception) { return emptyList() }
