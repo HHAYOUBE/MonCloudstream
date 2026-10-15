@@ -12,11 +12,12 @@ Ce dépôt contient les extensions existantes et des modules personnels.
 - AnimeSama
 - SenpaiStream
 
-**État important :** AnimeSama et SenpaiStream utilisent AniList pour la recherche, les fiches et les pages de tendances. Les fiches peuvent afficher des liens d’épisodes provenant de plateformes de diffusion officielles référencées par AniList, lorsqu’ils sont disponibles. La disponibilité varie selon l’anime et la région. AniList ne fournit pas un catalogue complet des épisodes, et cette intégration ne contourne ni DRM, ni connexion, ni abonnement.
+**État important :** AnimeSama et SenpaiStream utilisent actuellement AniList pour les catalogues d’animation, la recherche, les fiches et les pages de tendances. SenpaiStream classe aussi les films d’animation au format Movie. Cela ne constitue pas encore un catalogue général de films/séries non animés, ni une intégration complète des saisons du site Senpai-Stream. Les fiches peuvent afficher des liens de plateformes officielles référencées par AniList lorsqu’ils existent et sont pris en charge. Aucun lecteur YouTube n’est intégré.
 
 ## État technique des extensions anime
 
 - Recherche, fiches et pages de tendances : données de catalogue publiques d’AniList.
+- SenpaiStream distingue les films d’animation des autres formats d’animés ; les saisons de séries générales et les catalogues non animés restent à intégrer via une API autorisée adaptée.
 - Les identifiants internes sont des identifiants AniList, pas des URL d’épisodes.
 - Aucun épisode fictif n’est généré pour simuler une lecture fonctionnelle.
 - Les liens de plateformes officielles référencés par AniList sont envoyés à l’extracteur CloudStream intégré ; la lecture dépend de la disponibilité publique et de la prise en charge par l’extracteur.
@@ -35,7 +36,7 @@ https://raw.githubusercontent.com/HHAYOUBE/MonCloudstream/builds/repo.json
 
 - **Catalogue central de liens :** `Sources/sources.json`
 - **Instructions pour modifier les liens :** [Sources/README.md](Sources/README.md)
-- **Vérificateur automatique :** `scripts/validate_sources.py`
+- **Vérificateurs automatiques :** `scripts/validate_sources.py` et `scripts/validate_extensions.py`
 - **Validation et compilation :** `.github/workflows/validate-build.yml`
 - **Publication des extensions compilées :** `.github/workflows/build.yml`
 
