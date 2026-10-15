@@ -244,7 +244,7 @@ class SenpaiStreamProvider : MainAPI() {
         // Accept only direct media URLs from a source the user is authorized to access.
         // A normal webpage URL is not a playable video stream and must not be advertised as one.
         val uri = try { java.net.URI(data) } catch (_: Exception) { return false }
-        if (uri.scheme !in listOf("http", "https") || uri.host.isNullOrBlank()) return false
+        if (uri.scheme != "https" || uri.host.isNullOrBlank()) return false
 
         val host = uri.host.lowercase()
         val path = uri.path.orEmpty().lowercase()
