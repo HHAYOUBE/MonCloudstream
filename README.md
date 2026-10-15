@@ -12,7 +12,17 @@ Ce dépôt contient les extensions existantes et des modules personnels.
 - AnimeSama
 - SenpaiStream
 
-**État important :** AnimeSama et SenpaiStream sont des squelettes techniques. Leur recherche, leurs fiches et la lecture ne sont pas implémentées ; le nom et l'URL configurée ne suffisent pas à rendre un site lisible dans CloudStream. Toute intégration doit s'appuyer sur des contenus et flux autorisés.
+**État important :** AnimeSama et SenpaiStream utilisent actuellement AniList pour les catalogues d’animation, la recherche, les fiches et les pages de tendances. SenpaiStream classe aussi les films d’animation au format Movie. Cela ne constitue pas encore un catalogue général de films/séries non animés, ni une intégration complète des saisons du site Senpai-Stream. Les fiches peuvent afficher des liens de plateformes officielles référencées par AniList lorsqu’ils existent et sont pris en charge. Aucun lecteur YouTube n’est intégré.
+
+## État technique des extensions anime
+
+- Recherche, fiches et pages de tendances : données de catalogue publiques d’AniList.
+- SenpaiStream distingue les films d’animation des autres formats d’animés ; les saisons de séries générales et les catalogues non animés restent à intégrer via une API autorisée adaptée.
+- Les identifiants internes sont des identifiants AniList, pas des URL d’épisodes.
+- Aucun épisode fictif n’est généré pour simuler une lecture fonctionnelle.
+- Les liens de plateformes officielles référencés par AniList sont envoyés à l’extracteur CloudStream intégré ; la lecture dépend de la disponibilité publique et de la prise en charge par l’extracteur.
+- Les autres liens directs acceptés par `loadLinks` sont limités aux médias HTTP(S) reconnaissables (`.m3u8`, `.mpd`, `.mp4`, `.m4v`, `.webm`, `.mkv`).
+- Les futurs fournisseurs vidéo doivent être isolés dans leurs propres adaptateurs, utiliser des flux autorisés et être testés via la CI avant publication.
 
 ## Installer le dépôt
 
@@ -26,7 +36,7 @@ https://raw.githubusercontent.com/HHAYOUBE/MonCloudstream/builds/repo.json
 
 - **Catalogue central de liens :** `Sources/sources.json`
 - **Instructions pour modifier les liens :** [Sources/README.md](Sources/README.md)
-- **Vérificateur automatique :** `scripts/validate_sources.py`
+- **Vérificateurs automatiques :** `scripts/validate_sources.py` et `scripts/validate_extensions.py`
 - **Validation et compilation :** `.github/workflows/validate-build.yml`
 - **Publication des extensions compilées :** `.github/workflows/build.yml`
 

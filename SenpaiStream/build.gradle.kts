@@ -1,10 +1,10 @@
 version = 1
 
 cloudstream {
-    description = "Module Senpai-Stream — intégration à compléter pour une source autorisée."
+    description = "Catalogue AniList : recherche, fiches et tendances. Sources vidéo officielles prises en charge quand disponibles ; flux directs autorisés possibles."
     authors = listOf("HHAYOUBE")
-    status = 1
-    tvTypes = listOf("Anime", "TvSeries", "Movie")
+    status = 0
+    tvTypes = listOf("Anime", "Movie")
     language = "fr"
     isCrossPlatform = false
 }
