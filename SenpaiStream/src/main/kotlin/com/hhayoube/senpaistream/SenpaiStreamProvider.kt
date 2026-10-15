@@ -191,11 +191,18 @@ class SenpaiStreamProvider : MainAPI() {
         val isMovie = item.optString("format") == "MOVIE"
 
         if (isMovie) {
+            // Keep all authorized movie sources together so CloudStream can offer
+            // alternatives instead of silently discarding every source after the first.
+            val movieSourcesData = mapOf(
+                "sources" to episodeSources.map { (sourceName, sourceUrl) ->
+                    mapOf("name" to sourceName, "url" to sourceUrl)
+                }
+            ).toJson()
             return newMovieLoadResponse(
                 title,
                 "$mainUrl/anilist/$id",
                 TvType.Movie,
-                episodeSources.firstOrNull()?.second.orEmpty()
+                movieSourcesData
             ) {
                 posterUrl = poster
                 backgroundPosterUrl = banner
@@ -244,29 +251,60 @@ class SenpaiStreamProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit,
     ): Boolean {
-        // Accept only direct media URLs from a source the user is authorized to access.
-        // A normal webpage URL is not a playable video stream and must not be advertised as one.
-        val uri = try { java.net.URI(data) } catch (_: Exception) { return false }
-        if (uri.scheme != "https" || uri.host.isNullOrBlank()) return false
-
-        val host = uri.host.lowercase()
-        val path = uri.path.orEmpty().lowercase()
-        val type = when {
-            path.endsWith(".m3u8") -> ExtractorLinkType.M3U8
-            path.endsWith(".mpd") -> ExtractorLinkType.DASH
-            path.endsWith(".mp4") || path.endsWith(".m4v") ||
-                path.endsWith(".webm") || path.endsWith(".mkv") -> ExtractorLinkType.VIDEO
-            else -> null
+        // Movie entries carry a JSON bundle of authorized source pages. Try every
+        // source so one unavailable provider does not hide the remaining alternatives.
+        // Episode entries may still carry a single URL.
+        val sources: List<Pair<String, String>> = try {
+            val payload = JSONObject(data)
+            val array = payload.optJSONArray("sources")
+            if (array != null) {
+                (0 until array.length()).mapNotNull { index ->
+                    val item = array.optJSONObject(index) ?: return@mapNotNull null
+                    val sourceUrl = item.optString("url").takeIf { it.isNotBlank() && it != "null" }
+                        ?: return@mapNotNull null
+                    val sourceName = item.optString("name").takeIf { it.isNotBlank() && it != "null" }
+                        ?: "Source ${index + 1}"
+                    sourceName to sourceUrl
+                }
+            } else {
+                listOf(name to data)
+            }
+        } catch (_: Exception) {
+            listOf(name to data)
         }
 
-        if (type != null) {
-            callback(newExtractorLink(source = name, name = "Vidéo directe", url = data, type = type))
-            return true
-        }
+        var found = false
+        for ((sourceName, sourceUrl) in sources) {
+            val uri = try { java.net.URI(sourceUrl) } catch (_: Exception) { continue }
+            if (uri.scheme != "https" || uri.host.isNullOrBlank()) continue
 
-        // Let CloudStream handle supported official platform pages. No DRM, login,
-        // subscription, or paywall bypass is attempted.
-        if (!isOfficialStreamingHost(host)) return false
-        return loadExtractor(data, mainUrl, subtitleCallback, callback)
+            val host = uri.host.lowercase()
+            val path = uri.path.orEmpty().lowercase()
+            val type = when {
+                path.endsWith(".m3u8") -> ExtractorLinkType.M3U8
+                path.endsWith(".mpd") -> ExtractorLinkType.DASH
+                path.endsWith(".mp4") || path.endsWith(".m4v") ||
+                    path.endsWith(".webm") || path.endsWith(".mkv") -> ExtractorLinkType.VIDEO
+                else -> null
+            }
+
+            if (type != null) {
+                callback(newExtractorLink(source = name, name = sourceName, url = sourceUrl, type = type))
+                found = true
+                continue
+            }
+
+            // Only use supported official streaming platforms. Do not bypass DRM,
+            // account requirements, subscriptions, or paywalls.
+            if (!isOfficialStreamingHost(host)) continue
+            try {
+                if (loadExtractor(sourceUrl, mainUrl, subtitleCallback) { link ->
+                    callback(link)
+                }) found = true
+            } catch (_: Exception) {
+                // A failed extractor should not prevent trying the next source.
+            }
+        }
+        return found
     }
 }
