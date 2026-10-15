@@ -298,9 +298,7 @@ class SenpaiStreamProvider : MainAPI() {
             // account requirements, subscriptions, or paywalls.
             if (!isOfficialStreamingHost(host)) continue
             try {
-                if (loadExtractor(sourceUrl, mainUrl, subtitleCallback) { link ->
-                    callback(link)
-                }) found = true
+                if (loadExtractor(sourceUrl, mainUrl, subtitleCallback, callback)) found = true
             } catch (_: Exception) {
                 // A failed extractor should not prevent trying the next source.
             }
