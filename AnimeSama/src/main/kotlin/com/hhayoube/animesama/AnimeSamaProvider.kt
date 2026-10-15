@@ -49,9 +49,9 @@ class AnimeSamaProvider : MainAPI() {
         if (page < 1) return newHomePageResponse(pageRequest.name, emptyList())
 
         val gql = """
-            query (${' {
-              Page(page: ${' {
-                media(sort: ${', isAdult: false) {
+            query (${'$'}page: Int, ${'$'}sort: [MediaSort]) {
+              Page(page: ${'$'}page, perPage: 20) {
+                media(sort: ${'$'}sort, type: ANIME, isAdult: false) {
                   id title { romaji english native } coverImage { large extraLarge }
                   startDate { year } episodes
                 }
