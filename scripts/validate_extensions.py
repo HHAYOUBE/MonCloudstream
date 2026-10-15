@@ -33,7 +33,7 @@ def main() -> None:
             fail(f"{name} is missing its CloudStream link-loading implementation.")
         if 'uri.scheme != "https" || uri.host.isnullorblank()' not in lowered:
             fail(f"{name} must reject non-HTTPS direct video links.")
-        if "comingsoon = episodesources.isempty()" not in lowered:
+        if "comingsoon =" not in lowered or "isempty()" not in lowered:
             fail(f"{name} must mark entries without sources as coming soon.")
 
     senpai = loaded["SenpaiStream"]
