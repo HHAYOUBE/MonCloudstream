@@ -124,11 +124,18 @@ class SenpaiStreamProvider : MainAPI() {
             val cover = item.optJSONObject("coverImage")
             val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
                 ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
-            newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
-                posterUrl = poster
-                year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
-                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
-                otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+            if (item.optString("format") == "MOVIE") {
+                newMovieSearchResponse(title, "$mainUrl/anilist/$id", TvType.Movie) {
+                    posterUrl = poster
+                    year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                }
+            } else {
+                newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
+                    posterUrl = poster
+                    year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                    item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
+                    otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+                }
             }
         }
     }
