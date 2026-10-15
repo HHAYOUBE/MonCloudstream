@@ -1,4 +1,4 @@
-version = 1
+version = 2
 
 cloudstream {
     description = "Catalogue AniList : recherche, fiches et tendances. Sources vidéo officielles prises en charge quand disponibles ; flux directs autorisés possibles."
