@@ -140,7 +140,7 @@ class SenpaiStreamProvider : MainAPI() {
               Media(id: ${'$'}id, type: ANIME) {
                 id title { romaji english native } description(asHtml: false)
                 coverImage { large extraLarge } bannerImage startDate { year }
-                episodes duration genres synonyms streamingEpisodes { title thumbnail url site }
+                episodes duration genres synonyms format streamingEpisodes { title thumbnail url site }
               }
             }
         """.trimIndent()
