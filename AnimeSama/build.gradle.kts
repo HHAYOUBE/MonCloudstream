@@ -1,10 +1,10 @@
 version = 1
 
 cloudstream {
-    description = "Module Anime-Sama — intégration à compléter pour une source autorisée."
+    description = "Catalogue anime AniList : recherche, fiches et tendances. La lecture nécessite une source vidéo autorisée intégrée séparément."
     authors = listOf("HHAYOUBE")
-    status = 1
-    tvTypes = listOf("Anime", "TvSeries", "Movie")
+    status = 0
+    tvTypes = listOf("Anime")
     language = "fr"
     isCrossPlatform = false
 }
