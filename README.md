@@ -24,13 +24,17 @@ Ce dépôt contient les extensions existantes et des modules personnels.
 - Les autres liens directs acceptés par `loadLinks` sont limités aux médias HTTP(S) reconnaissables (`.m3u8`, `.mpd`, `.mp4`, `.m4v`, `.webm`, `.mkv`).
 - Les futurs fournisseurs vidéo doivent être isolés dans leurs propres adaptateurs, utiliser des flux autorisés et être testés via la CI avant publication.
 
-## Installer le dépôt
+## Installer le dépôt dans CloudStream / Goodstream
 
-Après une publication réussie du workflow, ajoute cette adresse dans CloudStream :
+**Adresse à ajouter comme dépôt (manifest) :**
 
 ```text
 https://raw.githubusercontent.com/HHAYOUBE/MonCloudstream/builds/repo.json
 ```
+
+**Important :** colle cette adresse dans la fonction « Ajouter un dépôt ». Ne colle pas l’URL de `plugins.json` à cet endroit : ce fichier est le catalogue interne utilisé par `repo.json`, ce n’est pas le manifeste à ajouter. Les fichiers `.cs3` sont les extensions compilées, pas l’adresse du dépôt.
+
+Après avoir ajouté le dépôt, actualise sa liste et installe AnimeSama ou SenpaiStream depuis le dépôt. Si le dépôt n’apparaît toujours pas, vérifie que l’application accepte les dépôts CloudStream compatibles.
 
 ## Maintenance simple
 
