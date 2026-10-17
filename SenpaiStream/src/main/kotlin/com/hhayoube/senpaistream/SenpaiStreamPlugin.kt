@@ -8,5 +8,6 @@ import com.lagradost.cloudstream3.plugins.Plugin
 class SenpaiStreamPlugin : Plugin() {
     override fun load(context: Context) {
         registerMainAPI(SenpaiStreamProvider())
+        registerMainAPI(GeneralCatalogProvider())
     }
 }
