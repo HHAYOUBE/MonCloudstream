@@ -1,10 +1,10 @@
-version = 3
+version = 4
 
 cloudstream {
-    description = "Catalogue AniList : recherche, fiches et tendances. Sources vidéo officielles prises en charge quand disponibles ; flux directs autorisés possibles."
+    description = "Catalogue général de films et séries avec métadonnées Cinemeta, en complément du catalogue AniList. La lecture dépend de sources officielles ou autorisées disponibles."
     authors = listOf("HHAYOUBE")
     status = 1
-    tvTypes = listOf("Anime", "Movie")
+    tvTypes = listOf("Anime", "Movie", "TvSeries")
     language = "fr"
     isCrossPlatform = false
 }

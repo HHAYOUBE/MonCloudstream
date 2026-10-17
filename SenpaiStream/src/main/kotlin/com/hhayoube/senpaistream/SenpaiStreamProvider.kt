@@ -1,5 +1,6 @@
 package com.hhayoube.senpaistream
 
+import com.lagradost.cloudstream3.ErrorLoadingException
 import com.lagradost.cloudstream3.DubStatus
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.HomePageResponse
@@ -55,8 +56,8 @@ class SenpaiStreamProvider : MainAPI() {
         """.trimIndent()
         val root = try {
             request(gql, mapOf("page" to page, "sort" to listOf(pageRequest.data)))
-        } catch (_: Exception) {
-            return newHomePageResponse(pageRequest.name, emptyList())
+        } catch (e: Exception) {
+            throw ErrorLoadingException("Catalogue AniList indisponible : " + (e.message ?: "erreur réseau"))
         }
         val media = root.optJSONObject("data")?.optJSONObject("Page")?.optJSONArray("media")
             ?: return newHomePageResponse(pageRequest.name, emptyList())
@@ -92,8 +93,15 @@ class SenpaiStreamProvider : MainAPI() {
     private suspend fun request(query: String, variables: Map<String, Any?>): JSONObject {
         val body = mapOf("query" to query, "variables" to variables).toJson()
             .toRequestBody(RequestBodyTypes.JSON.toMediaTypeOrNull())
-        val response = JSONObject(app.post(endpoint, requestBody = body, headers = mapOf("Accept" to "application/json")).text)
-        if (response.has("errors")) throw IllegalStateException("AniList GraphQL returned errors")
+        val httpResponse = app.post(endpoint, requestBody = body, headers = mapOf("Accept" to "application/json"))
+        if (httpResponse.okhttpResponse.code !in 200..299) {
+            throw ErrorLoadingException("AniList a répondu HTTP " + httpResponse.okhttpResponse.code)
+        }
+        val response = JSONObject(httpResponse.text)
+        if (response.has("errors")) {
+            val details = response.optJSONArray("errors")?.optJSONObject(0)?.optString("message")
+            throw ErrorLoadingException("AniList GraphQL : " + (details?.takeIf { it.isNotBlank() } ?: "erreur inconnue"))
+        }
         return response
     }
 
@@ -110,7 +118,7 @@ class SenpaiStreamProvider : MainAPI() {
               }
             }
         """.trimIndent()
-        val root = try { request(gql, mapOf("search" to term)) } catch (_: Exception) { return emptyList() }
+        val root = try { request(gql, mapOf("search" to term)) } catch (e: Exception) { throw ErrorLoadingException("Recherche AniList impossible : " + (e.message ?: "erreur réseau")) }
         val media = root.optJSONObject("data")?.optJSONObject("Page")?.optJSONArray("media") ?: return emptyList()
         return (0 until media.length()).mapNotNull { i ->
             val item = media.optJSONObject(i) ?: return@mapNotNull null
