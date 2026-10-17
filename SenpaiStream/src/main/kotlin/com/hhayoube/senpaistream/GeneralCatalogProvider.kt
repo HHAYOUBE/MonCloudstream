@@ -53,8 +53,25 @@ class GeneralCatalogProvider : MainAPI() {
     override suspend fun search(query: String): List<SearchResponse> {
         val term = query.trim()
         if (term.isEmpty()) return emptyList()
-        val movies = runCatching { fetchCatalog("movie", 1, term) }.getOrDefault(emptyList())
-        val series = runCatching { fetchCatalog("series", 1, term) }.getOrDefault(emptyList())
+        var failures = 0
+        var lastError: Exception? = null
+        val movies = try {
+            fetchCatalog("movie", 1, term)
+        } catch (e: Exception) {
+            failures++
+            lastError = e
+            emptyList()
+        }
+        val series = try {
+            fetchCatalog("series", 1, term)
+        } catch (e: Exception) {
+            failures++
+            lastError = e
+            emptyList()
+        }
+        if (failures == 2) {
+            throw ErrorLoadingException("Recherche Cinemeta impossible : " + (lastError?.message ?: "erreur réseau"))
+        }
         return (movies + series).distinctBy { it.url }.take(MAX_SEARCH_RESULTS)
     }
 
@@ -96,7 +113,11 @@ class GeneralCatalogProvider : MainAPI() {
         val match = Regex("/meta/(movie|series)/([^/?#]+)").find(url) ?: return null
         val type = match.groupValues[1]
         val id = match.groupValues[2]
-        val root = runCatching { requestJson("$mainUrl/meta/$type/$id.json") }.getOrNull() ?: return null
+        val root = try {
+            requestJson("$mainUrl/meta/$type/$id.json")
+        } catch (e: Exception) {
+            throw ErrorLoadingException("Fiche Cinemeta indisponible : " + (e.message ?: "erreur réseau"))
+        }
         val item = root.optJSONObject("meta") ?: return null
         val title = item.optString("name").takeIf(String::isNotBlank) ?: return null
         val poster = item.optString("poster").takeIf(String::isNotBlank)
