@@ -1,0 +1,8 @@
+{
+  "name": "MonCloudstream",
+  "description": "Dépôt personnel d’extensions CloudStream",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/HHAYOUBE/MonCloudstream/builds/plugins.json"
+  ]
+}

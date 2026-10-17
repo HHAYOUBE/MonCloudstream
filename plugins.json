@@ -1,0 +1,42 @@
+[
+  {
+    "url": "https://raw.githubusercontent.com/HHAYOUBE/MonCloudstream/builds/AnimeSama.cs3",
+    "status": 1,
+    "version": 3,
+    "name": "AnimeSama",
+    "internalName": "AnimeSama",
+    "authors": [
+      "HHAYOUBE"
+    ],
+    "description": "Catalogue AniList : recherche, fiches et tendances. Sources vidéo officielles prises en charge quand disponibles ; flux directs autorisés possibles.",
+    "fileSize": 24338,
+    "repositoryUrl": "https://github.com/HHAYOUBE/MonCloudstream",
+    "language": "fr",
+    "tvTypes": [
+      "Anime"
+    ],
+    "apiVersion": 1,
+    "fileHash": "sha256-2e1f7dd98ed8cf0929a6c148ab2302ffb8290092de38345b1fec5e47e37be250"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/HHAYOUBE/MonCloudstream/builds/SenpaiStream.cs3",
+    "status": 1,
+    "version": 4,
+    "name": "SenpaiStream",
+    "internalName": "SenpaiStream",
+    "authors": [
+      "HHAYOUBE"
+    ],
+    "description": "Catalogue général de films et séries avec métadonnées Cinemeta, en complément du catalogue AniList. La lecture dépend de sources officielles ou autorisées disponibles.",
+    "fileSize": 31424,
+    "repositoryUrl": "https://github.com/HHAYOUBE/MonCloudstream",
+    "language": "fr",
+    "tvTypes": [
+      "Anime",
+      "Movie",
+      "TvSeries"
+    ],
+    "apiVersion": 1,
+    "fileHash": "sha256-ac71119786428eb26682ad9389d76a10983a737038ba9c58f7c95c087a000744"
+  }
+]
