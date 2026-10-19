@@ -9,5 +9,6 @@ class SenpaiStreamPlugin : Plugin() {
     override fun load(context: Context) {
         registerMainAPI(SenpaiStreamProvider())
         registerMainAPI(GeneralCatalogProvider())
+        registerMainAPI(PublicDomainFilmsProvider())
     }
 }
