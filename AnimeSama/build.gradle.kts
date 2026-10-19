@@ -1,10 +1,10 @@
-version = 3
+version = 4
 
 cloudstream {
-    description = "Catalogue AniList : recherche, fiches et tendances. Sources vidéo officielles prises en charge quand disponibles ; flux directs autorisés possibles."
+    description = "Catalogue anime AniList enrichi : tendances, popularité, notes, nouveautés, favoris, séries longues, classement alphabétique, recherche et fiches. Les épisodes utilisent les liens des plateformes officielles quand AniList en fournit."
     authors = listOf("HHAYOUBE")
     status = 1
-    tvTypes = listOf("Anime")
+    tvTypes = listOf("Anime", "Movie")
     language = "fr"
     isCrossPlatform = false
 }
