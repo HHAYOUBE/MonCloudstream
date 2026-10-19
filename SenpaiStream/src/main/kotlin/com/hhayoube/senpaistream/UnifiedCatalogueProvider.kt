@@ -59,7 +59,7 @@ class UnifiedCatalogueProvider : MainAPI() {
                 data = childData,
                 horizontalImages = request.horizontalImages
             )
-        )
+        ) ?: newHomePageResponse(request.name, emptyList())
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
