@@ -37,7 +37,11 @@ class AnimeSamaProvider : MainAPI() {
         "TRENDING_DESC" to "Tendances",
         "POPULARITY_DESC" to "Les plus populaires",
         "SCORE_DESC" to "Les mieux notés",
-        "START_DATE_DESC" to "Nouveautés"
+        "START_DATE_DESC" to "Nouveautés",
+        "FAVOURITES_DESC" to "Les plus aimés",
+        "END_DATE_DESC" to "Séries terminées récemment",
+        "EPISODES_DESC" to "Séries longues",
+        "TITLE_ROMAJI" to "Ordre alphabétique"
     )
 
     override suspend fun getMainPage(page: Int, pageRequest: MainPageRequest): HomePageResponse {
