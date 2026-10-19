@@ -13,7 +13,9 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.newAnimeLoadResponse
+import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newAnimeSearchResponse
+import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
@@ -29,7 +31,7 @@ class AnimeSamaProvider : MainAPI() {
     override var mainUrl = AnimeSamaConfig.baseUrl
     override var name = "AnimeSama"
     override var lang = "fr"
-    override val supportedTypes = setOf(TvType.Anime)
+    override val supportedTypes = setOf(TvType.Anime, TvType.Movie)
     private val endpoint = "https://graphql.anilist.co"
 
     override val hasMainPage = true
@@ -37,7 +39,11 @@ class AnimeSamaProvider : MainAPI() {
         "TRENDING_DESC" to "Tendances",
         "POPULARITY_DESC" to "Les plus populaires",
         "SCORE_DESC" to "Les mieux notés",
-        "START_DATE_DESC" to "Nouveautés"
+        "START_DATE_DESC" to "Nouveautés",
+        "FAVOURITES_DESC" to "Les plus aimés",
+        "END_DATE_DESC" to "Séries terminées récemment",
+        "EPISODES_DESC" to "Séries longues",
+        "TITLE_ROMAJI" to "Ordre alphabétique"
     )
 
     override suspend fun getMainPage(page: Int, pageRequest: MainPageRequest): HomePageResponse {
@@ -47,7 +53,7 @@ class AnimeSamaProvider : MainAPI() {
               Page(page: ${'$'}page, perPage: 20) {
                 media(sort: ${'$'}sort, type: ANIME, isAdult: false) {
                   id title { romaji english native } coverImage { large extraLarge }
-                  startDate { year } episodes
+                  startDate { year } episodes format
                 }
               }
             }
@@ -71,11 +77,18 @@ class AnimeSamaProvider : MainAPI() {
             val cover = item.optJSONObject("coverImage")
             val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
                 ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
-            newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
-                posterUrl = poster
-                year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
-                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
-                otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+            if (item.optString("format") == "MOVIE") {
+                newMovieSearchResponse(title, "$mainUrl/anilist/$id", TvType.Movie) {
+                    posterUrl = poster
+                    year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                }
+            } else {
+                newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
+                    posterUrl = poster
+                    year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                    item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
+                    otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+                }
             }
         }
         return newHomePageResponse(pageRequest, results, hasNext = media.length() == 20)
@@ -104,7 +117,7 @@ class AnimeSamaProvider : MainAPI() {
               Page(page: 1, perPage: 20) {
                 media(search: ${'$'}search, type: ANIME, isAdult: false, sort: SEARCH_MATCH) {
                   id title { romaji english native } coverImage { large extraLarge }
-                  startDate { year } episodes
+                  startDate { year } episodes format
                 }
               }
             }
@@ -123,11 +136,18 @@ class AnimeSamaProvider : MainAPI() {
             val cover = item.optJSONObject("coverImage")
             val poster = cover?.optString("extraLarge")?.takeIf { it.isNotBlank() && it != "null" }
                 ?: cover?.optString("large")?.takeIf { it.isNotBlank() && it != "null" }
-            newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
-                posterUrl = poster
-                year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
-                item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
-                otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+            if (item.optString("format") == "MOVIE") {
+                newMovieSearchResponse(title, "$mainUrl/anilist/$id", TvType.Movie) {
+                    posterUrl = poster
+                    year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                }
+            } else {
+                newAnimeSearchResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
+                    posterUrl = poster
+                    year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                    item.optInt("episodes", 0).takeIf { it > 0 }?.let { episodes[DubStatus.Subbed] = it }
+                    otherName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
+                }
             }
         }
     }
@@ -139,12 +159,17 @@ class AnimeSamaProvider : MainAPI() {
               Media(id: ${'$'}id, type: ANIME) {
                 id title { romaji english native } description(asHtml: false)
                 coverImage { large extraLarge } bannerImage startDate { year }
-                episodes duration genres synonyms streamingEpisodes { title thumbnail url site }
+                episodes duration genres synonyms format streamingEpisodes { title thumbnail url site }
               }
             }
         """.trimIndent()
-        val root = try { request(gql, mapOf("id" to id)) } catch (_: Exception) { return null }
-        val item = root.optJSONObject("data")?.optJSONObject("Media") ?: return null
+        val root = try {
+            request(gql, mapOf("id" to id))
+        } catch (e: Exception) {
+            throw ErrorLoadingException("Fiche AniList indisponible : " + (e.message ?: "erreur réseau"))
+        }
+        val item = root.optJSONObject("data")?.optJSONObject("Media")
+            ?: throw ErrorLoadingException("Fiche anime introuvable dans AniList (ID $id).")
         val titles = item.optJSONObject("title") ?: JSONObject()
         val title = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
             ?: titles.optString("romaji").takeIf { it.isNotBlank() && it != "null" }
@@ -172,6 +197,25 @@ class AnimeSamaProvider : MainAPI() {
         val manualEpisodes = ManualEpisodeLinks.links[id].orEmpty()
             .filter { it.episode > 0 && it.source.isNotBlank() && it.url.isNotBlank() }
             .filter { it.language.equals("VF", ignoreCase = true) || it.language.equals("VOSTFR", ignoreCase = true) }
+        if (item.optString("format") == "MOVIE") {
+            val movieData = mapOf(
+                "sources" to officialVideoEpisodes.map { (sourceTitle, sourceUrl) ->
+                    mapOf("name" to sourceTitle, "url" to sourceUrl)
+                }
+            ).toJson()
+            return newMovieLoadResponse(title, "$mainUrl/anilist/$id", TvType.Movie, movieData) {
+                posterUrl = poster
+                backgroundPosterUrl = item.optString("bannerImage").takeIf { it.isNotBlank() && it != "null" }
+                year = item.optJSONObject("startDate")?.optInt("year")?.takeIf { it > 0 }
+                plot = item.optString("description").takeIf { it.isNotBlank() && it != "null" }
+                duration = item.optInt("duration", 0).takeIf { it > 0 }
+                tags = item.optJSONArray("genres")?.let { arr ->
+                    (0 until arr.length()).mapNotNull { arr.optString(it).takeIf(String::isNotBlank) }
+                }
+                comingSoon = officialVideoEpisodes.isEmpty()
+            }
+        }
+
         return newAnimeLoadResponse(title, "$mainUrl/anilist/$id", TvType.Anime) {
             engName = titles.optString("english").takeIf { it.isNotBlank() && it != "null" }
             japName = titles.optString("native").takeIf { it.isNotBlank() && it != "null" }
