@@ -37,6 +37,11 @@ jobs:
       - name: Install Android 35
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
+      - name: Setup Gradle 8.14.4
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: "8.14.4"
+
       - name: Build all extensions
         run: |
           gradle :AfterDark:make :Frembed:make :Flemmix:make :Xalaflix:make :MonExtension:make :AnimeSama:make :SenpaiStream:make makePluginsJson --stacktrace

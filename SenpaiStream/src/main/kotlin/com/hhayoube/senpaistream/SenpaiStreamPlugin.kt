@@ -7,8 +7,7 @@ import com.lagradost.cloudstream3.plugins.Plugin
 @CloudstreamPlugin
 class SenpaiStreamPlugin : Plugin() {
     override fun load(context: Context) {
-        registerMainAPI(SenpaiStreamProvider())
-        registerMainAPI(GeneralCatalogProvider())
-        registerMainAPI(PublicDomainFilmsProvider())
+        // A single visible provider; the other classes are internal data/playback adapters.
+        registerMainAPI(UnifiedCatalogueProvider())
     }
 }
