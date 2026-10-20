@@ -248,7 +248,9 @@ class SenpaiStreamProvider : MainAPI() {
             "bilibili.com", "bilibili.tv",
             "crunchyroll.com", "hulu.com", "netflix.com", "primevideo.com",
             "amazon.com", "disneyplus.com", "hidive.com",
-            "animationdigitalnetwork.fr", "animationdigitalnetwork.com"
+            "animationdigitalnetwork.fr", "animationdigitalnetwork.com",
+            // Official video platforms may be listed by AniList or configured manually.
+            "youtube.com", "youtu.be", "dailymotion.com", "dai.ly"
         )
         return allowedDomains.any { host == it || host.endsWith(".$it") }
     }
