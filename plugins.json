@@ -1,0 +1,43 @@
+[
+  {
+    "fileHash": "sha256-b2c296b0595ccd031f8d4be7c7870c8cba44752403cda67b7e5e099d4db4fa1e",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/HHAYOUBE/MonCloudstream",
+    "fileSize": 26748,
+    "status": 1,
+    "language": "fr",
+    "authors": [
+      "HHAYOUBE"
+    ],
+    "tvTypes": [
+      "Anime",
+      "Movie"
+    ],
+    "version": 5,
+    "internalName": "AnimeSama",
+    "description": "Catalogue anime AniList enrichi : tendances, popularité, notes, nouveautés, favoris, séries longues, classement alphabétique, recherche et fiches. Les épisodes utilisent les liens des plateformes officielles quand AniList en fournit.",
+    "url": "https://raw.githubusercontent.com/HHAYOUBE/MonCloudstream/builds/AnimeSama.cs3",
+    "name": "AnimeSama"
+  },
+  {
+    "fileHash": "sha256-a689eeafc3b3dc987564ce9931c211e22ea33c184f6e1b86e10d98cefe2d5332",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/HHAYOUBE/MonCloudstream",
+    "fileSize": 43319,
+    "status": 1,
+    "language": "fr",
+    "authors": [
+      "HHAYOUBE"
+    ],
+    "tvTypes": [
+      "Anime",
+      "Movie",
+      "TvSeries"
+    ],
+    "version": 7,
+    "internalName": "SenpaiStream",
+    "description": "Catalogue unique anime, films et séries. Recherche unifiée et films du domaine public lisibles ; les fiches Cinemeta de films/séries sont informatives, et les épisodes anime passent par les liens officiels compatibles.",
+    "url": "https://raw.githubusercontent.com/HHAYOUBE/MonCloudstream/builds/SenpaiStream.cs3",
+    "name": "SenpaiStream"
+  }
+]
