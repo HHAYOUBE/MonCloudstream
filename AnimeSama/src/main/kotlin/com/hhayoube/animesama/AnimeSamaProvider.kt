@@ -275,8 +275,8 @@ class AnimeSamaProvider : MainAPI() {
             "crunchyroll.com", "hulu.com", "netflix.com", "primevideo.com",
             "amazon.com", "disneyplus.com", "hidive.com",
             "animationdigitalnetwork.fr", "animationdigitalnetwork.com",
-            // Official video platforms may be listed by AniList or configured manually.
-            "youtube.com", "youtu.be", "dailymotion.com", "dai.ly"
+            // Additional official video-host pages supported by CloudStream extractors.
+            "dailymotion.com", "dai.ly"
         )
         return allowedDomains.any { host == it || host.endsWith(".$it") }
     }
