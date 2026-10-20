@@ -1,4 +1,4 @@
-version = 6
+version = 7
 
 cloudstream {
     description = "Catalogue unique anime, films et séries. Recherche unifiée et films du domaine public lisibles ; les fiches Cinemeta de films/séries sont informatives, et les épisodes anime passent par les liens officiels compatibles."
